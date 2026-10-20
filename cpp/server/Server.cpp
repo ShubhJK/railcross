@@ -1,6 +1,6 @@
 // ============================================================
 // Server.cpp — HTTP routes: static files + JSON API
-// Live data via RailKit + simulation fallback
+// Live data via RailRadar + simulation fallback
 // ============================================================
 #include "Server.h"
 #include "JsonSerializer.h"
@@ -108,94 +108,13 @@ void RailServer::run() {
     });
 
     // --------------------------------------------------------------
-    // GET /api/live-status?train=XXXXX   — live train position
-    // Uses RailKit API (x-api-key header). Requires RAILKIT_API_KEY env var.
-    // --------------------------------------------------------------
-    svr.Get("/api/live-status", [](const httplib::Request& req, httplib::Response& res) {
-        const char* key = std::getenv("RAILKIT_API_KEY");
-        if (!key || std::string(key).empty()) {
-            res.status = 503;
-            res.set_content(
-                R"({"error":"RAILKIT_API_KEY not set. Running in simulation mode."})",
-                "application/json");
-            return;
-        }
-        if (!req.has_param("train")) {
-            res.status = 400;
-            res.set_content(
-                R"({"error":"Missing 'train' query parameter. Example: /api/live-status?train=14645"})",
-                "application/json");
-            return;
-        }
-
-        std::string trainNumber = req.get_param_value("train");
-        LiveDataFetcher fetcher(key);
-        json data = fetcher.fetchTrainLive(trainNumber);
-
-        if (data.empty()) {
-            res.status = 502;
-            res.set_content(
-                R"({"error":"RailKit returned no data. Check the train number, date, or API quota."})",
-                "application/json");
-            return;
-        }
-
-        json out = {
-            { "source", "RailKit — live train status" },
-            { "train",  trainNumber },
-            { "data",   data }
-        };
-        res.set_content(out.dump(), "application/json");
-    });
-
-    // --------------------------------------------------------------
-    // GET /api/live-station?stn=PTA&hrs=2  — trains at a station
-    // Uses RailKit API. Requires RAILKIT_API_KEY env var.
-    // --------------------------------------------------------------
-    svr.Get("/api/live-station", [](const httplib::Request& req, httplib::Response& res) {
-        const char* key = std::getenv("RAILKIT_API_KEY");
-        if (!key || std::string(key).empty()) {
-            res.status = 503;
-            res.set_content(
-                R"({"error":"RAILKIT_API_KEY not set. Running in simulation mode."})",
-                "application/json");
-            return;
-        }
-        std::string stn = req.has_param("stn") ? req.get_param_value("stn") : "PTA";
-        int hrs = 2;
-        if (req.has_param("hrs")) {
-            try { hrs = std::stoi(req.get_param_value("hrs")); } catch (...) { hrs = 2; }
-        }
-
-        LiveDataFetcher fetcher(key);
-        json data = fetcher.fetchStationLive(stn, hrs);
-
-        if (data.empty()) {
-            res.status = 502;
-            res.set_content(
-                R"({"error":"RailKit returned no data for this station."})",
-                "application/json");
-            return;
-        }
-
-        json out = {
-            { "source",  "RailKit — live at station" },
-            { "station", stn },
-            { "hours",   hrs },
-            { "data",    data }
-        };
-        res.set_content(out.dump(), "application/json");
-    });
-
-    // --------------------------------------------------------------
-       // --------------------------------------------------------------
     // GET /api/live-station?stn=PTA&hrs=2 — Secure Proxy to RailRadar
     // --------------------------------------------------------------
     svr.Get("/api/live-station", [](const httplib::Request& req, httplib::Response& res) {
         const char* key = std::getenv("RAILRADAR_API_KEY");
         if (!key || std::string(key).empty()) {
             res.status = 503;
-            res.set_content(R"({"error":"RAILRADAR_API_KEY not set on server."})", "application/json");
+            res.set_content(R"({"error":"RAILRADAR_API_KEY not set in Render Environment Variables."})", "application/json");
             return;
         }
         std::string stn = req.has_param("stn") ? req.get_param_value("stn") : "PTA";
@@ -214,13 +133,15 @@ void RailServer::run() {
             res.set_content(api_res->body, "application/json");
         } else {
             res.status = 502;
-            res.set_content(R"({"error":"Failed to fetch from RailRadar"})", "application/json");
+            res.set_content(R"({"error":"Failed to fetch from RailRadar API. Check Render logs."})", "application/json");
         }
     });
- // GET /api/health — server status + current data mode
+
+    // --------------------------------------------------------------
+    // GET /api/health — server status + current data mode
     // --------------------------------------------------------------
     svr.Get("/api/health", [this](const httplib::Request&, httplib::Response& res) {
-        const char* key = std::getenv("RAILKIT_API_KEY");
+        const char* key = std::getenv("RAILRADAR_API_KEY");
         bool liveMode = (key && std::string(key).length() > 0);
 
         json out = {
@@ -229,7 +150,7 @@ void RailServer::run() {
             { "cities",     cities.size() },
             { "service",    "RailCross C++ Backend" },
             { "version",    "1.0" },
-            { "data_mode",  liveMode ? "LIVE (RailKit)" : "SIMULATION" }
+            { "data_mode",  liveMode ? "LIVE (RailRadar)" : "SIMULATION" }
         };
         res.set_content(out.dump(), "application/json");
     });
@@ -248,11 +169,11 @@ void RailServer::run() {
     std::cout << "     API base: http://localhost:" << port << "/api/\n";
     std::cout << "     Serving : " << webRoot << "\n";
 
-    const char* key = std::getenv("RAILKIT_API_KEY");
+    const char* key = std::getenv("RAILRADAR_API_KEY");
     if (key && std::string(key).length() > 0) {
-        std::cout << "     Mode    : LIVE (RailKit API)\n";
+        std::cout << "     Mode    : LIVE (RailRadar API)\n";
     } else {
-        std::cout << "     Mode    : SIMULATION (set RAILKIT_API_KEY to go live)\n";
+        std::cout << "     Mode    : SIMULATION (set RAILRADAR_API_KEY to go live)\n";
     }
     std::cout << "     Press Ctrl + C to stop.\n\n";
 

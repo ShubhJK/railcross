@@ -11,6 +11,9 @@ WORKDIR /app
 
 COPY . .
 
+# Create the build directory BEFORE compiling
+RUN mkdir -p build
+
 # Compile with OpenSSL support
 RUN g++ -std=c++17 -O2 -Wall -Wextra -DCPPHTTPLIB_OPENSSL_SUPPORT -Icpp/include -Icpp/third_party \
     cpp/server/server_main.cpp cpp/server/Server.cpp cpp/src/DataStore.cpp \

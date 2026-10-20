@@ -31,23 +31,17 @@ void RailServer::run() {
         res.status = 204;
     });
 
-    // --------------------------------------------------------------
-    // GET /api/crossings — all crossings as JSON
-    // --------------------------------------------------------------
+    // GET /api/crossings
     svr.Get("/api/crossings", [this](const httplib::Request&, httplib::Response& res) {
         res.set_content(RailJson::crossingsToJson(crossings).dump(), "application/json");
     });
 
-    // --------------------------------------------------------------
-    // GET /api/cities — all cities for route planner
-    // --------------------------------------------------------------
+    // GET /api/cities
     svr.Get("/api/cities", [this](const httplib::Request&, httplib::Response& res) {
         res.set_content(RailJson::citiesToJson(cities).dump(), "application/json");
     });
 
-    // --------------------------------------------------------------
-    // GET /api/plan?from=X&to=Y — ranked routes
-    // --------------------------------------------------------------
+    // GET /api/plan
     svr.Get("/api/plan", [this](const httplib::Request& req, httplib::Response& res) {
         if (!req.has_param("from") || !req.has_param("to")) {
             res.status = 400;
@@ -67,9 +61,7 @@ void RailServer::run() {
         res.set_content(out.dump(), "application/json");
     });
 
-    // --------------------------------------------------------------
-    // GET /api/simulate — advance a random crossing (simulation mode)
-    // --------------------------------------------------------------
+    // GET /api/simulate
     svr.Get("/api/simulate", [this](const httplib::Request&, httplib::Response& res) {
         if (crossings.empty()) {
             res.status = 404;
@@ -107,9 +99,7 @@ void RailServer::run() {
         res.set_content(out.dump(), "application/json");
     });
 
-    // --------------------------------------------------------------
     // GET /api/live-station?stn=PTA&hrs=2 — Secure Proxy to RailRadar
-    // --------------------------------------------------------------
     svr.Get("/api/live-station", [](const httplib::Request& req, httplib::Response& res) {
         const char* key = std::getenv("RAILRADAR_API_KEY");
         if (!key || std::string(key).empty()) {
@@ -117,6 +107,7 @@ void RailServer::run() {
             res.set_content(R"({"error":"RAILRADAR_API_KEY not set in Render Environment Variables."})", "application/json");
             return;
         }
+        
         std::string stn = req.has_param("stn") ? req.get_param_value("stn") : "PTA";
         int hrs = req.has_param("hrs") ? std::stoi(req.get_param_value("hrs")) : 2;
 
@@ -125,21 +116,27 @@ void RailServer::run() {
             { "Authorization", "Bearer " + std::string(key) },
             { "accept", "application/json" }
         });
+        cli.set_connection_timeout(10, 0);
+        cli.set_read_timeout(15, 0);
         
         std::string path = "/v1/stations/" + stn + "/live?hours=" + std::to_string(hrs);
         auto api_res = cli.Get(path.c_str());
 
         if (api_res && api_res->status == 200) {
             res.set_content(api_res->body, "application/json");
-        } else {
+        } else if (api_res) {
+            // The API responded, but with an error (e.g., 401 Unauthorized or 404)
             res.status = 502;
-            res.set_content(R"({"error":"Failed to fetch from RailRadar API. Check Render logs."})", "application/json");
+            std::string err_msg = "{\"error\":\"RailRadar returned HTTP " + std::to_string(api_res->status) + ". Body: " + api_res->body + "\"}";
+            res.set_content(err_msg, "application/json");
+        } else {
+            // The C++ HTTP client couldn't even reach the server (SSL/Network error)
+            res.status = 502;
+            res.set_content(R"({"error":"C++ HTTP client failed to connect. Possible SSL certificate or network issue on Render."})", "application/json");
         }
     });
 
-    // --------------------------------------------------------------
-    // GET /api/health — server status + current data mode
-    // --------------------------------------------------------------
+    // GET /api/health
     svr.Get("/api/health", [this](const httplib::Request&, httplib::Response& res) {
         const char* key = std::getenv("RAILRADAR_API_KEY");
         bool liveMode = (key && std::string(key).length() > 0);
@@ -155,9 +152,7 @@ void RailServer::run() {
         res.set_content(out.dump(), "application/json");
     });
 
-    // --------------------------------------------------------------
-    // Serve static website files from webRoot
-    // --------------------------------------------------------------
+    // Serve static website files
     svr.set_mount_point("/", webRoot);
     svr.set_file_extension_and_mimetype_mapping("html", "text/html");
     svr.set_file_extension_and_mimetype_mapping("css",  "text/css");

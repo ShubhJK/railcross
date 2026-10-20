@@ -407,8 +407,6 @@ footer{margin-top:40px;padding:46px 0 30px;background:linear-gradient(170deg,#2C
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-// ⚠️ PASTE YOUR RAILRADAR API KEY HERE
-
 const API_BASE = (location.protocol === 'file:') ? 'http://localhost:8080' : '';
 
 let CROSSINGS = [];
@@ -440,7 +438,7 @@ function showToast(msg, ico = 'ℹ️', dur = 3600){
 const FALLBACK_CROSSINGS = [
   { id:'PB-PTA-020', name:'20 No. Phatak (Crossing No. 20)', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Baradari Garden area', avgWaitMinutes:9, dailyTrains:48, alternateRoute:'Baradari Garden Flyover / Mall Road Bypass', status:'OPEN', secondsToNext:58 },
   { id:'PB-PTA-021', name:'21 No. Phatak (Crossing No. 21)', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Near Dukhniwaran Sahib Gurudwara', avgWaitMinutes:8, dailyTrains:46, alternateRoute:'Sirhind Road Bypass', status:'OPEN', secondsToNext:41 },
-   { id:'PB-PTA-023', name:'23 No. Phatak (Crossing No. 23)', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Model Town, near Patiala Cantt Station', avgWaitMinutes:9, dailyTrains:50, alternateRoute:'Model Town Flyover', status:'CLOSING', secondsToNext:19 },
+  { id:'PB-PTA-023', name:'23 No. Phatak (Crossing No. 23)', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Model Town, near Patiala Cantt Station', avgWaitMinutes:9, dailyTrains:50, alternateRoute:'Model Town Flyover', status:'CLOSING', secondsToNext:19 },
   { id:'PB-PTA-024', name:'24 No. Phatak (Crossing No. 24)', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Near Patiala Cantt Station, Model Town', avgWaitMinutes:11, dailyTrains:54, alternateRoute:'Patiala Cantt Road / Sangrur Bypass', status:'OPEN', secondsToNext:33 },
   { id:'PB-PTA-016', name:'Crossing No. 16', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Patiala city', avgWaitMinutes:8, dailyTrains:44, alternateRoute:'City Bypass Road', status:'OPEN', secondsToNext:64 },
   { id:'PB-PTA-019', name:'Crossing No. 19', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Patiala city', avgWaitMinutes:8, dailyTrains:44, alternateRoute:'City Bypass Road', status:'CLOSED', secondsToNext:124 },
@@ -706,7 +704,7 @@ function renderRoutes(routes, fromName, toName, departTime){
 }
 
 /* ============================================================
-   LIVE RAILRADAR API LOGIC (Corrected Mapping)
+   LIVE RAILRADAR API LOGIC (Secure Proxy via C++)
    ============================================================ */
 async function loadLiveTrains() {
   const stn  = document.getElementById('liveStationSelect').value;
@@ -714,28 +712,21 @@ async function loadLiveTrains() {
   const box  = document.getElementById('liveTrainsBox');
   const stat = document.getElementById('liveStatus');
 
-  if (!RAILRADAR_KEY || RAILRADAR_KEY === 'YOUR_RAILRADAR_API_KEY_HERE') {
-    stat.textContent = '⚠️ Set RAILRADAR_KEY in the script';
-    box.innerHTML = '<div class="empty-state"><b>API Key Missing</b>Open index.html and replace YOUR_RAILRADAR_API_KEY_HERE with your key.</div>';
-    return;
-  }
-
-  box.innerHTML = '<div class="empty-state"><b>Loading…</b>Fetching live data from RailRadar</div>';
+  box.innerHTML = '<div class="empty-state"><b>Loading…</b>Fetching live data from RailRadar via C++ backend</div>';
   stat.textContent = 'Fetching…';
 
   try {
+    // Call the C++ backend proxy endpoint, NOT RailRadar directly.
     const url = `${API_BASE}/api/live-station?stn=${stn}&hrs=${hrs}`;
     const r = await fetch(url, {
-      headers: {
-        'accept': 'application/json'
-      }
+      headers: { 'accept': 'application/json' }
     });
 
     stat.textContent = `HTTP ${r.status}`;
 
     if (!r.ok) {
       const errText = await r.text();
-      box.innerHTML = `<div class="empty-state"><b>RailRadar returned HTTP ${r.status}</b>${errText.slice(0,400)}</div>`;
+      box.innerHTML = `<div class="empty-state"><b>Backend returned HTTP ${r.status}</b>${errText.slice(0,400)}<br><br>Check if RAILRADAR_API_KEY is set in Render Environment Variables.</div>`;
       return;
     }
 
@@ -777,13 +768,11 @@ async function loadLiveTrains() {
          eta = live.expectedArrivalTime.slice(11, 16);
       }
 
-      // Aggressively check for platform number in all possible locations
       const pfRaw = live.platform || live.pf || live.platform_number || stop.platform || t.platform;
       const platform = pfRaw ? `PF ${pfRaw}` : '—';
 
       const delayed = delay > 0;
       const statusType = live.type || 'scheduled';
-      
       const statusText = statusType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
 
       return `
@@ -807,13 +796,14 @@ async function loadLiveTrains() {
     stat.textContent = '✅ Live data loaded';
 
   } catch (e) {
-    box.innerHTML = `<div class="empty-state"><b>Fetch failed</b>${e.message}<br>Open F12 → Console for details.</div>`;
+    box.innerHTML = `<div class="empty-state"><b>Fetch failed</b>${e.message}<br>Check your internet connection or Render logs.</div>`;
     stat.textContent = '❌ Failed';
     console.error('[RailRadar]', e);
   }
 }
 
 document.getElementById('loadLiveBtn').addEventListener('click', loadLiveTrains);
+
 /* ============================================================
    BOOT AND SIMULATION LOGIC
    ============================================================ */

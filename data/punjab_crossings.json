@@ -1,0 +1,43 @@
+{
+  "state": "Punjab",
+  "focus_city": "Patiala",
+  "last_updated": "2026-10-17",
+  "crossings": [
+    { "id":"PB-PTA-020","name":"20 No. Phatak (Crossing No. 20)","city":"Patiala","state":"Punjab","zone":"Northern Railway","division":"Ambala","line":"Rajpura-Bathinda Line","landmark":"Baradari Garden area","avgWaitMinutes":9,"dailyTrains":48,"alternateRoute":"Baradari Garden Flyover / Mall Road Bypass","latitude":30.3398,"longitude":76.3869 },
+    { "id":"PB-PTA-021","name":"21 No. Phatak (Crossing No. 21)","city":"Patiala","state":"Punjab","zone":"Northern Railway","division":"Ambala","line":"Rajpura-Bathinda Line","landmark":"Near Dukhniwaran Sahib Gurudwara","avgWaitMinutes":8,"dailyTrains":46,"alternateRoute":"Sirhind Road Bypass","latitude":30.3450,"longitude":76.3920 },
+    { "id":"PB-PTA-022","name":"22 No. Phatak (Crossing No. 22)","city":"Patiala","state":"Punjab","zone":"Northern Railway","division":"Ambala","line":"Rajpura-Bathinda Line","landmark":"Bhupindra Road, Ajit Nagar","avgWaitMinutes":10,"dailyTrains":52,"alternateRoute":"Bhupindra Road Flyover / Leela Bhawan Bypass","latitude":30.3480,"longitude":76.3980 },
+    { "id":"PB-PTA-023","name":"23 No. Phatak (Crossing No. 23)","city":"Patiala","state":"Punjab","zone":"Northern Railway","division":"Ambala","line":"Rajpura-Bathinda Line","landmark":"Model Town, near Patiala Cantt Station","avgWaitMinutes":9,"dailyTrains":50,"alternateRoute":"Model Town Flyover","latitude":30.3510,"longitude":76.4020 },
+    { "id":"PB-PTA-024","name":"24 No. Phatak (Crossing No. 24)","city":"Patiala","state":"Punjab","zone":"Northern Railway","division":"Ambala","line":"Rajpura-Bathinda Line","landmark":"Near Patiala Cantt Station, Model Town","avgWaitMinutes":11,"dailyTrains":54,"alternateRoute":"Patiala Cantt Road / Sangrur Bypass","latitude":30.3530,"longitude":76.4050 },
+    { "id":"PB-PTA-016","name":"Crossing No. 16","city":"Patiala","state":"Punjab","zone":"Northern Railway","division":"Ambala","line":"Rajpura-Bathinda Line","landmark":"Patiala city","avgWaitMinutes":8,"dailyTrains":44,"alternateRoute":"City Bypass Road","latitude":30.3290,"longitude":76.3790 },
+    { "id":"PB-PTA-019","name":"Crossing No. 19","city":"Patiala","state":"Punjab","zone":"Northern Railway","division":"Ambala","line":"Rajpura-Bathinda Line","landmark":"Patiala city","avgWaitMinutes":8,"dailyTrains":44,"alternateRoute":"City Bypass Road","latitude":30.3340,"longitude":76.3830 },
+    { "id":"PB-PTA-SAMANA","name":"Patiala-Samana Road Crossing","city":"Patiala","state":"Punjab","zone":"Northern Railway","division":"Ambala","line":"Patiala-Samana Branch","landmark":"Patiala-Samana Road","avgWaitMinutes":7,"dailyTrains":22,"alternateRoute":"Sangrur Road Bypass","latitude":30.3012,"longitude":76.4012 },
+    { "id":"PB-PTA-RAJPURA","name":"Patiala-Rajpura Road Gate","city":"Patiala","state":"Punjab","zone":"Northern Railway","division":"Ambala","line":"Rajpura-Bathinda Main Line","landmark":"Patiala-Rajpura Road","avgWaitMinutes":11,"dailyTrains":52,"alternateRoute":"Rajpura Bypass via NH-44","latitude":30.3601,"longitude":76.4230 },
+    { "id":"PB-PTA-SANGRUR","name":"Sangrur Road Crossing","city":"Patiala","state":"Punjab","zone":"Northern Railway","division":"Ambala","line":"Patiala-Sangrur Branch","landmark":"Sangrur Road, Patiala","avgWaitMinutes":6,"dailyTrains":18,"alternateRoute":"Sangrur Bypass via Bhawanigarh","latitude":30.2765,"longitude":76.3680 },
+    { "id":"PB-PTA-CANAL","name":"Canal Level Crossing","city":"Patiala","state":"Punjab","zone":"Northern Railway","division":"Ambala","line":"Rajpura-Bathinda Line","landmark":"Ranbirpura / Dhamo Majra","avgWaitMinutes":7,"dailyTrains":30,"alternateRoute":"Canal Road Bypass","latitude":30.3120,"longitude":76.3710 },
+    { "id":"PB-RAJ-001","name":"Rajpura Junction Gate","city":"Rajpura","state":"Punjab","zone":"Northern Railway","division":"Ambala","line":"Delhi-Amritsar Main Line","landmark":"Rajpura Junction","avgWaitMinutes":11,"dailyTrains":58,"alternateRoute":"Rajpura Bypass / NH-44","latitude":30.4833,"longitude":76.5945 },
+    { "id":"PB-SIR-001","name":"Sirhind-Barara LC 113/CE","city":"Sirhind","state":"Punjab","zone":"Northern Railway","division":"Ambala","line":"Barara-Tandwal Section","landmark":"Sirhind","avgWaitMinutes":8,"dailyTrains":32,"alternateRoute":"NH-44 Bypass via Rajpura","latitude":30.6432,"longitude":76.3821 },
+    { "id":"PB-LDH-001","name":"Ludhiana-Jalandhar LC C-43","city":"Ludhiana","state":"Punjab","zone":"Northern Railway","division":"Firozpur","line":"Jalandhar-Hoshiarpur Line","landmark":"Ludhiana city","avgWaitMinutes":8,"dailyTrains":40,"alternateRoute":"Ferozepur Road Flyover","latitude":30.9010,"longitude":75.8573 },
+    { "id":"PB-JAL-001","name":"Jalandhar-Amritsar LC C-124","city":"Jalandhar","state":"Punjab","zone":"Northern Railway","division":"Firozpur","line":"Ludhiana-Amritsar Line","landmark":"Jalandhar city","avgWaitMinutes":12,"dailyTrains":44,"alternateRoute":"Kapurthala Road Bypass","latitude":31.3260,"longitude":75.5762 },
+    { "id":"PB-ASR-001","name":"Amritsar-Pathankot LC C-9","city":"Amritsar","state":"Punjab","zone":"Northern Railway","division":"Firozpur","line":"Amritsar-Pathankot Line","landmark":"Amritsar city","avgWaitMinutes":10,"dailyTrains":36,"alternateRoute":"GT Road Bypass / NH-354","latitude":31.6340,"longitude":74.8723 },
+    { "id":"PB-BTI-001","name":"Bathinda-Delhi LC B/87","city":"Bathinda","state":"Punjab","zone":"Northern Railway","division":"Ambala","line":"Bathinda-Delhi Main Line","landmark":"Bathinda city","avgWaitMinutes":10,"dailyTrains":50,"alternateRoute":"Barnala Bypass","latitude":30.2110,"longitude":74.9455 },
+    { "id":"PB-DOR-001","name":"Doraha LC 164A","city":"Doraha","state":"Punjab","zone":"Northern Railway","division":"Firozpur","line":"Ambala-Ludhiana Section","landmark":"Doraha","avgWaitMinutes":13,"dailyTrains":56,"alternateRoute":"Doraha ROB / NH-44","latitude":30.7998,"longitude":76.0201 }
+  ],
+  "cities": [
+    { "name":"Patiala","lat":30.3398,"lng":76.3869 },
+    { "name":"Rajpura","lat":30.4833,"lng":76.5945 },
+    { "name":"Sirhind","lat":30.6432,"lng":76.3821 },
+    { "name":"Sangrur","lat":30.2458,"lng":75.8421 },
+    { "name":"Ludhiana","lat":30.9010,"lng":75.8573 },
+    { "name":"Jalandhar","lat":31.3260,"lng":75.5762 },
+    { "name":"Amritsar","lat":31.6340,"lng":74.8723 },
+    { "name":"Bathinda","lat":30.2110,"lng":74.9455 },
+    { "name":"Doraha","lat":30.7998,"lng":76.0201 },
+    { "name":"Chandigarh","lat":30.7333,"lng":76.7794 },
+    { "name":"Mohali","lat":30.7046,"lng":76.7179 },
+    { "name":"Moga","lat":30.8158,"lng":75.1717 },
+    { "name":"Firozpur","lat":30.9331,"lng":74.6225 },
+    { "name":"Pathankot","lat":32.2643,"lng":75.6421 },
+    { "name":"Hoshiarpur","lat":31.5143,"lng":75.9115 },
+    { "name":"Ambala","lat":30.3782,"lng":76.7767 }
+  ]
+}

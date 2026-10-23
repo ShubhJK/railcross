@@ -206,6 +206,15 @@ footer{margin-top:40px;padding:46px 0 30px;background:linear-gradient(170deg,#2C
 .is-hidden{display:none !important}
 @media (max-width:1020px){.hero-grid{grid-template-columns:1fr}.planner-wrap{grid-template-columns:1fr}.foot-grid{grid-template-columns:1fr 1fr}}
 @media (max-width:760px){.nav-links,.nav-cta{display:none}.hero-stats{grid-template-columns:repeat(2,1fr)}.crossing-grid{grid-template-columns:1fr}.detail-grid{grid-template-columns:1fr}.foot-grid{grid-template-columns:1fr}}
+  /* Partner's Train Illustration Placement */
+  .hero { position: relative; overflow: hidden; }
+  .rail-illustration {
+    position: absolute; bottom: -20px; left: 0;
+    width: 100%; height: 60%; pointer-events: none;
+    z-index: 0; opacity: 0.25; /* Subtle background */
+  }
+  .hero-grid { position: relative; z-index: 1; }
+  @media(max-width: 768px) { .rail-illustration { display: none; } }
 </style>
 </head>
 <body>
@@ -228,6 +237,42 @@ footer{margin-top:40px;padding:46px 0 30px;background:linear-gradient(170deg,#2C
 </header>
 
 <section class="hero" id="home">
+  <div class="rail-illustration" aria-hidden="true">
+    <svg viewBox="0 0 980 520" preserveAspectRatio="xMidYMax slice" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="trainBody" x1="180" y1="300" x2="180" y2="430" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#f9f2cf"/>
+          <stop offset="1" stop-color="#a7bc9a"/>
+        </linearGradient>
+      </defs>
+      <!-- overhead lines -->
+      <g stroke="#476c61" stroke-width="2" opacity=".4">
+        <path d="M0 212Q430 196 980 218"/>
+        <path d="M0 231Q470 215 980 237"/>
+        <path d="M155 120L155 300M610 128L610 304M862 105L862 310" stroke-width="4"/>
+        <path d="M115 151L195 151M568 160L651 160M820 139L900 139" stroke-width="5"/>
+      </g>
+      <!-- the train and tracks -->
+      <g class="train-car">
+        <path d="M-35 303H796Q823 303 823 330V410H-35Z" fill="#35584b" stroke="#28483d" stroke-width="5"/>
+        <path d="M-30 315H790V390H-30Z" fill="url(#trainBody)"/>
+        <path d="M-30 387H790V410H-30Z" fill="#71977a"/>
+        <path d="M792 303l36 26v81h-38Z" fill="#e8efce" stroke="#35584b" stroke-width="4"/>
+        <path d="M809 322l13 10v52l-13 12Z" fill="#9ab6a0"/>
+        <g fill="#7bd0c4" stroke="#35584b" stroke-width="4">
+          <rect x="-12" y="325" width="82" height="46" rx="8"/><rect x="82" y="325" width="82" height="46" rx="8"/><rect x="176" y="325" width="82" height="46" rx="8"/><rect x="270" y="325" width="82" height="46" rx="8"/><rect x="364" y="325" width="82" height="46" rx="8"/><rect x="458" y="325" width="82" height="46" rx="8"/><rect x="552" y="325" width="82" height="46" rx="8"/><rect x="646" y="325" width="82" height="46" rx="8"/>
+        </g>
+        <g stroke="#e8f5d7" stroke-width="3" opacity=".8">
+          <path d="M-2 333l61 34M92 333l61 34M186 333l61 34M280 333l61 34M374 333l61 34M468 333l61 34M562 333l61 34M656 333l61 34"/>
+        </g>
+        <path d="M-25 296H797" stroke="#28483d" stroke-width="8"/>
+        <path d="M-25 302H797" stroke="#f8f0c8" stroke-width="3"/>
+        <g fill="#29473c"><circle cx="85" cy="421" r="26"/><circle cx="230" cy="421" r="26"/><circle cx="375" cy="421" r="26"/><circle cx="520" cy="421" r="26"/><circle cx="665" cy="421" r="26"/></g>
+        <g fill="#607f6a"><circle cx="85" cy="421" r="12"/><circle cx="230" cy="421" r="12"/><circle cx="375" cy="421" r="12"/><circle cx="520" cy="421" r="12"/><circle cx="665" cy="421" r="12"/></g>
+        <path d="M0 440H980M0 454H980" stroke="#6d8067" stroke-width="5"/>
+      </g>
+    </svg>
+  </div>
   <div class="container hero-grid">
     <div>
       <span class="eyebrow">🇮🇳 Punjab-first · Patiala deep coverage</span>
@@ -407,6 +452,8 @@ footer{margin-top:40px;padding:46px 0 30px;background:linear-gradient(170deg,#2C
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
+// ⚠️ PASTE YOUR RAILRADAR API KEY HERE
+
 const API_BASE = (location.protocol === 'file:') ? 'http://localhost:8080' : '';
 
 let CROSSINGS = [];
@@ -438,7 +485,7 @@ function showToast(msg, ico = 'ℹ️', dur = 3600){
 const FALLBACK_CROSSINGS = [
   { id:'PB-PTA-020', name:'20 No. Phatak (Crossing No. 20)', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Baradari Garden area', avgWaitMinutes:9, dailyTrains:48, alternateRoute:'Baradari Garden Flyover / Mall Road Bypass', status:'OPEN', secondsToNext:58 },
   { id:'PB-PTA-021', name:'21 No. Phatak (Crossing No. 21)', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Near Dukhniwaran Sahib Gurudwara', avgWaitMinutes:8, dailyTrains:46, alternateRoute:'Sirhind Road Bypass', status:'OPEN', secondsToNext:41 },
-  { id:'PB-PTA-023', name:'23 No. Phatak (Crossing No. 23)', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Model Town, near Patiala Cantt Station', avgWaitMinutes:9, dailyTrains:50, alternateRoute:'Model Town Flyover', status:'CLOSING', secondsToNext:19 },
+   { id:'PB-PTA-023', name:'23 No. Phatak (Crossing No. 23)', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Model Town, near Patiala Cantt Station', avgWaitMinutes:9, dailyTrains:50, alternateRoute:'Model Town Flyover', status:'CLOSING', secondsToNext:19 },
   { id:'PB-PTA-024', name:'24 No. Phatak (Crossing No. 24)', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Near Patiala Cantt Station, Model Town', avgWaitMinutes:11, dailyTrains:54, alternateRoute:'Patiala Cantt Road / Sangrur Bypass', status:'OPEN', secondsToNext:33 },
   { id:'PB-PTA-016', name:'Crossing No. 16', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Patiala city', avgWaitMinutes:8, dailyTrains:44, alternateRoute:'City Bypass Road', status:'OPEN', secondsToNext:64 },
   { id:'PB-PTA-019', name:'Crossing No. 19', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Patiala city', avgWaitMinutes:8, dailyTrains:44, alternateRoute:'City Bypass Road', status:'CLOSED', secondsToNext:124 },
@@ -704,7 +751,7 @@ function renderRoutes(routes, fromName, toName, departTime){
 }
 
 /* ============================================================
-   LIVE RAILRADAR API LOGIC (Secure Proxy via C++)
+   LIVE RAILRADAR API LOGIC (Corrected Mapping)
    ============================================================ */
 async function loadLiveTrains() {
   const stn  = document.getElementById('liveStationSelect').value;
@@ -712,20 +759,28 @@ async function loadLiveTrains() {
   const box  = document.getElementById('liveTrainsBox');
   const stat = document.getElementById('liveStatus');
 
-  box.innerHTML = '<div class="empty-state"><b>Loading…</b>Fetching live data from RailRadar via C++ backend</div>';
+  if (!RAILRADAR_KEY || RAILRADAR_KEY === 'YOUR_RAILRADAR_API_KEY_HERE') {
+    stat.textContent = '⚠️ Set RAILRADAR_KEY in the script';
+    box.innerHTML = '<div class="empty-state"><b>API Key Missing</b>Open index.html and replace YOUR_RAILRADAR_API_KEY_HERE with your key.</div>';
+    return;
+  }
+
+  box.innerHTML = '<div class="empty-state"><b>Loading…</b>Fetching live data from RailRadar</div>';
   stat.textContent = 'Fetching…';
 
   try {
     const url = `${API_BASE}/api/live-station?stn=${stn}&hrs=${hrs}`;
     const r = await fetch(url, {
-      headers: { 'accept': 'application/json' }
+      headers: {
+        'accept': 'application/json'
+      }
     });
 
     stat.textContent = `HTTP ${r.status}`;
 
     if (!r.ok) {
       const errText = await r.text();
-      box.innerHTML = `<div class="empty-state"><b>Backend returned HTTP ${r.status}</b>${errText.slice(0,400)}<br><br>Check if RAILRADAR_API_KEY is set in Render Environment Variables.</div>`;
+      box.innerHTML = `<div class="empty-state"><b>RailRadar returned HTTP ${r.status}</b>${errText.slice(0,400)}</div>`;
       return;
     }
 
@@ -767,11 +822,13 @@ async function loadLiveTrains() {
          eta = live.expectedArrivalTime.slice(11, 16);
       }
 
+      // Aggressively check for platform number in all possible locations
       const pfRaw = live.platform || live.pf || live.platform_number || stop.platform || t.platform;
       const platform = pfRaw ? `PF ${pfRaw}` : '—';
 
       const delayed = delay > 0;
       const statusType = live.type || 'scheduled';
+      
       const statusText = statusType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
 
       return `
@@ -795,14 +852,13 @@ async function loadLiveTrains() {
     stat.textContent = '✅ Live data loaded';
 
   } catch (e) {
-    box.innerHTML = `<div class="empty-state"><b>Fetch failed</b>${e.message}<br>Check your internet connection or Render logs.</div>`;
+    box.innerHTML = `<div class="empty-state"><b>Fetch failed</b>${e.message}<br>Open F12 → Console for details.</div>`;
     stat.textContent = '❌ Failed';
     console.error('[RailRadar]', e);
   }
 }
 
 document.getElementById('loadLiveBtn').addEventListener('click', loadLiveTrains);
-
 /* ============================================================
    BOOT AND SIMULATION LOGIC
    ============================================================ */
@@ -850,7 +906,7 @@ new IntersectionObserver(entries => entries.forEach(en => {
 }), { rootMargin:'-45% 0px -50% 0px' });
 ['home','live-trains','dashboard','planner','oops'].forEach(id => { const el = document.getElementById(id); if (el) el.scrollIntoView; });
 
-async function loadInitialData(){
+async function loadData(){
   try {
     const [cr, ci] = await Promise.all([fetch(API_BASE + '/api/crossings'), fetch(API_BASE + '/api/cities')]);
     if (!cr.ok || !ci.ok) throw new Error();
@@ -892,10 +948,10 @@ function tick(){
 
 (async function boot(){
   document.getElementById('year').textContent = new Date().getFullYear();
-  await loadInitialData();
+  await loadData();
   tick();
   setInterval(tick, 1000);
-  // REMOVED setInterval(loadData, 3000) — this was the bug wiping the dropdowns!
+  if (location.protocol !== 'file:') setInterval(loadData, 3000);
 })();
 </script>
 </body>

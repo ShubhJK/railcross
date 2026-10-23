@@ -31,7 +31,7 @@ a{color:inherit}
 .btn-sm{padding:9px 15px;font-size:.83rem;border-radius:10px}
 .btn-block{width:100%}
 
-/* HERO & SLEEK TRAIN */
+/* HERO & CLASSIC INDIAN RAILWAYS TRAIN */
 .hero{padding:70px 0 120px;position:relative;overflow:hidden;min-height:620px;}
 .hero-grid{display:grid;grid-template-columns:1.12fr .88fr;gap:48px;align-items:center;position:relative;z-index:2;}
 .eyebrow{display:inline-flex;align-items:center;gap:8px;padding:7px 15px;border-radius:999px;background:rgba(255,255,255,.85);border:1.5px solid var(--line-2);font-size:.76rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--butter-700);margin-bottom:22px}
@@ -62,13 +62,13 @@ a{color:inherit}
 .t-open{color:#86EFAC}.t-closing{color:#FCD34D}.t-closed{color:#FCA5A5}
 .board-foot{margin-top:12px;padding-top:12px;border-top:1px solid #3B3527;font-size:.68rem;color:#8A8171;text-align:center}
 
-/* SLEEK MULTI-COACH TRAIN */
-.train-scene{position:absolute;bottom:0;left:0;width:100%;height:100px;overflow:hidden;z-index:1;pointer-events:none;}
-.track-bed{position:absolute;bottom:18px;width:100%;height:4px;background:#D9A520;border-top:1px solid #A87C10;border-bottom:1px solid #A87C10;}
-.track-sleepers{position:absolute;bottom:12px;width:200%;height:10px;background-image:repeating-linear-gradient(90deg, transparent, transparent 25px, #4A4234 25px, #4A4234 30px);animation:moveTrack 1.5s linear infinite;}
+/* CLASSIC INDIAN RAILWAYS STYLE */
+.train-scene{position:absolute;bottom:0;left:0;width:100%;height:110px;overflow:hidden;z-index:1;pointer-events:none;}
+.track-bed{position:absolute;bottom:20px;width:100%;height:4px;background:#D9A520;border-top:1px solid #A87C10;border-bottom:1px solid #A87C10;}
+.track-sleepers{position:absolute;bottom:14px;width:200%;height:10px;background-image:repeating-linear-gradient(90deg, transparent, transparent 25px, #4A4234 25px, #4A4234 30px);animation:moveTrack 1.5s linear infinite;}
 @keyframes moveTrack{to{transform:translateX(-30px);}}
-.moving-train{position:absolute;bottom:20px;left:-700px;width:680px;height:80px;animation:driveTrain 22s linear infinite;}
-@keyframes driveTrain{0%{transform:translateX(0);}100%{transform:translateX(calc(100vw + 700px));}}
+.moving-train{position:absolute;bottom:22px;left:-900px;width:880px;height:85px;animation:driveTrain 25s linear infinite;}
+@keyframes driveTrain{0%{transform:translateX(0);}100%{transform:translateX(calc(100vw + 900px));}}
 .wheel{transform-box:fill-box;transform-origin:center;animation:spinWheels 0.8s linear infinite;}
 @keyframes spinWheels{100%{transform:rotate(360deg);}}
 
@@ -218,7 +218,7 @@ footer{margin-top:40px;padding:46px 0 30px;background:linear-gradient(170deg,#2C
 .foot-bottom{padding-top:22px;border-top:1px solid #3B3527;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:.78rem;color:#7E7666}
 .is-hidden{display:none !important}
 @media (max-width:1020px){.hero-grid{grid-template-columns:1fr}.planner-wrap{grid-template-columns:1fr}.foot-grid{grid-template-columns:1fr 1fr}}
-@media (max-width:760px){.nav-links,.nav-cta{display:none}.hero-stats{grid-template-columns:repeat(2,1fr)}.crossing-grid{grid-template-columns:1fr}.detail-grid{grid-template-columns:1fr}.foot-grid{grid-template-columns:1fr}.hero{padding-bottom:110px;}.moving-train{animation-duration:12s;width:480px;height:56px;bottom:22px;left:-500px;}}
+@media (max-width:760px){.nav-links,.nav-cta{display:none}.hero-stats{grid-template-columns:repeat(2,1fr)}.crossing-grid{grid-template-columns:1fr}.detail-grid{grid-template-columns:1fr}.foot-grid{grid-template-columns:1fr}.hero{padding-bottom:110px;}.moving-train{animation-duration:15s;width:600px;height:58px;bottom:22px;left:-700px;}}
 </style>
 </head>
 <body>
@@ -259,82 +259,107 @@ footer{margin-top:40px;padding:46px 0 30px;background:linear-gradient(170deg,#2C
     </aside>
   </div>
 
-  <!-- NEW SLEEK MULTI-COACH TRAIN -->
+  <!-- CLASSIC INDIAN RAILWAYS TRAIN (WAP-7 STYLE) -->
   <div class="train-scene" aria-hidden="true">
     <div class="track-sleepers"></div>
     <div class="track-bed"></div>
     <div class="moving-train">
-      <svg viewBox="0 0 680 70" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 880 85" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
         
-        <!-- Coach 3 (Rear) -->
-        <rect x="20" y="20" width="150" height="30" rx="4" fill="#1E293B" />
-        <rect x="20" y="36" width="150" height="8" fill="#0EA5E9" />
-        <rect x="30" y="26" width="20" height="8" rx="2" fill="#FFD966" />
-        <rect x="60" y="26" width="20" height="8" rx="2" fill="#FFD966" />
-        <rect x="90" y="26" width="20" height="8" rx="2" fill="#FFD966" />
-        <rect x="120" y="26" width="20" height="8" rx="2" fill="#FFD966" />
-        
+        <!-- Coach 3 -->
+        <rect x="20" y="20" width="180" height="35" rx="2" fill="#1E293B" />
+        <rect x="20" y="42" width="180" height="8" fill="#0EA5E9" />
+        <rect x="30" y="26" width="16" height="10" rx="1" fill="#FFD966" />
+        <rect x="56" y="26" width="16" height="10" rx="1" fill="#FFD966" />
+        <rect x="82" y="26" width="16" height="10" rx="1" fill="#FFD966" />
+        <rect x="108" y="26" width="16" height="10" rx="1" fill="#FFD966" />
+        <rect x="134" y="26" width="16" height="10" rx="1" fill="#FFD966" />
+        <rect x="160" y="26" width="16" height="10" rx="1" fill="#FFD966" />
+
         <!-- Gangway 2 -->
-        <rect x="170" y="26" width="10" height="18" fill="#0F172A" />
+        <rect x="200" y="26" width="12" height="23" fill="#0F172A" />
 
         <!-- Coach 2 -->
-        <rect x="180" y="20" width="150" height="30" rx="4" fill="#1E293B" />
-        <rect x="180" y="36" width="150" height="8" fill="#0EA5E9" />
-        <rect x="190" y="26" width="20" height="8" rx="2" fill="#FFD966" />
-        <rect x="220" y="26" width="20" height="8" rx="2" fill="#FFD966" />
-        <rect x="250" y="26" width="20" height="8" rx="2" fill="#FFD966" />
-        <rect x="280" y="26" width="20" height="8" rx="2" fill="#FFD966" />
+        <rect x="212" y="20" width="180" height="35" rx="2" fill="#1E293B" />
+        <rect x="212" y="42" width="180" height="8" fill="#0EA5E9" />
+        <rect x="222" y="26" width="16" height="10" rx="1" fill="#FFD966" />
+        <rect x="248" y="26" width="16" height="10" rx="1" fill="#FFD966" />
+        <rect x="274" y="26" width="16" height="10" rx="1" fill="#FFD966" />
+        <rect x="300" y="26" width="16" height="10" rx="1" fill="#FFD966" />
+        <rect x="326" y="26" width="16" height="10" rx="1" fill="#FFD966" />
+        <rect x="352" y="26" width="16" height="10" rx="1" fill="#FFD966" />
 
         <!-- Gangway 1 -->
-        <rect x="330" y="26" width="10" height="18" fill="#0F172A" />
+        <rect x="392" y="26" width="12" height="23" fill="#0F172A" />
 
         <!-- Coach 1 -->
-        <rect x="340" y="20" width="150" height="30" rx="4" fill="#1E293B" />
-        <rect x="340" y="36" width="150" height="8" fill="#0EA5E9" />
-        <rect x="350" y="26" width="20" height="8" rx="2" fill="#FFD966" />
-        <rect x="380" y="26" width="20" height="8" rx="2" fill="#FFD966" />
-        <rect x="410" y="26" width="20" height="8" rx="2" fill="#FFD966" />
-        <rect x="440" y="26" width="20" height="8" rx="2" fill="#FFD966" />
+        <rect x="404" y="20" width="180" height="35" rx="2" fill="#1E293B" />
+        <rect x="404" y="42" width="180" height="8" fill="#0EA5E9" />
+        <rect x="414" y="26" width="16" height="10" rx="1" fill="#FFD966" />
+        <rect x="440" y="26" width="16" height="10" rx="1" fill="#FFD966" />
+        <rect x="466" y="26" width="16" height="10" rx="1" fill="#FFD966" />
+        <rect x="492" y="26" width="16" height="10" rx="1" fill="#FFD966" />
+        <rect x="518" y="26" width="16" height="10" rx="1" fill="#FFD966" />
+        <rect x="544" y="26" width="16" height="10" rx="1" fill="#FFD966" />
 
         <!-- Engine Gangway -->
-        <rect x="490" y="26" width="10" height="18" fill="#0F172A" />
+        <rect x="584" y="26" width="12" height="23" fill="#0F172A" />
 
-        <!-- Engine (Smooth Nose) -->
-        <path d="M 500 50 L 500 20 Q 500 10 515 10 L 590 10 Q 640 10 665 45 Q 670 48 670 50 Z" fill="#1E293B" />
-        <path d="M 500 36 L 670 36 L 670 50 L 500 50 Z" fill="#0EA5E9" />
+        <!-- Engine (WAP-7 Style) -->
+        <path d="M 596 20 L 760 20 Q 790 20 815 40 L 820 55 L 820 55 L 596 55 Z" fill="#1E293B" />
+        
+        <!-- Engine Livery (Stripe) -->
+        <path d="M 596 42 L 805 42 Q 815 42 818 47 L 820 55 L 596 55 Z" fill="#0EA5E9" />
+        
+        <!-- Engine Roof / Top Box -->
+        <rect x="620" y="12" width="100" height="8" rx="2" fill="#334155" />
+        
+        <!-- Pantograph (Top) -->
+        <path d="M 650 12 L 660 2 L 680 2 L 690 12" stroke="#A87C10" stroke-width="2" fill="none" />
+        <line x1="670" y1="2" x2="670" y2="-2" stroke="#A87C10" stroke-width="2" />
+        
+        <!-- Engine Vents/Louvers -->
+        <rect x="610" y="24" width="40" height="12" rx="2" fill="#0F172A" />
+        <rect x="660" y="24" width="40" height="12" rx="2" fill="#0F172A" />
         
         <!-- Engine Windows -->
-        <rect x="515" y="22" width="25" height="10" rx="2" fill="#FFD966" />
-        <rect x="550" y="22" width="25" height="10" rx="2" fill="#FFD966" />
-        
-        <!-- Cockpit Window -->
-        <path d="M 585 22 Q 625 24 645 40 L 585 40 Z" fill="#FFD966" />
-        
-        <!-- Headlight -->
-        <circle cx="660" cy="42" r="3" fill="#FFFDF3" />
+        <path d="M 720 24 L 750 24 L 760 34 L 720 34 Z" fill="#FFD966" />
+        <rect x="770" y="24" width="20" height="10" fill="#FFD966" />
 
-        <!-- Roof Line -->
-        <path d="M 20 20 L 490 20 Q 510 20 520 15" stroke="#334155" stroke-width="2" fill="none" />
+        <!-- Headlight -->
+        <rect x="812" y="45" width="6" height="4" rx="1" fill="#FFFDF3" />
 
         <!-- Bogeys (Coach 3) -->
-        <rect x="30" y="48" width="60" height="4" rx="2" fill="#334155" />
-        <g class="wheel"><circle cx="45" cy="50" r="6" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="45" cy="50" r="1.5" fill="#64748B"/></g>
-        <g class="wheel"><circle cx="75" cy="50" r="6" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="75" cy="50" r="1.5" fill="#64748B"/></g>
+        <rect x="40" y="55" width="60" height="4" fill="#334155" />
+        <rect x="120" y="55" width="60" height="4" fill="#334155" />
+        <g class="wheel"><circle cx="55" cy="57" r="7" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="55" cy="57" r="2" fill="#64748B"/></g>
+        <g class="wheel"><circle cx="85" cy="57" r="7" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="85" cy="57" r="2" fill="#64748B"/></g>
+        <g class="wheel"><circle cx="135" cy="57" r="7" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="135" cy="57" r="2" fill="#64748B"/></g>
+        <g class="wheel"><circle cx="165" cy="57" r="7" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="165" cy="57" r="2" fill="#64748B"/></g>
         
         <!-- Bogeys (Coach 2) -->
-        <rect x="190" y="48" width="60" height="4" rx="2" fill="#334155" />
-        <g class="wheel"><circle cx="205" cy="50" r="6" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="205" cy="50" r="1.5" fill="#64748B"/></g>
-        <g class="wheel"><circle cx="235" cy="50" r="6" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="235" cy="50" r="1.5" fill="#64748B"/></g>
+        <rect x="232" y="55" width="60" height="4" fill="#334155" />
+        <rect x="312" y="55" width="60" height="4" fill="#334155" />
+        <g class="wheel"><circle cx="247" cy="57" r="7" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="247" cy="57" r="2" fill="#64748B"/></g>
+        <g class="wheel"><circle cx="277" cy="57" r="7" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="277" cy="57" r="2" fill="#64748B"/></g>
+        <g class="wheel"><circle cx="327" cy="57" r="7" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="327" cy="57" r="2" fill="#64748B"/></g>
+        <g class="wheel"><circle cx="357" cy="57" r="7" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="357" cy="57" r="2" fill="#64748B"/></g>
 
         <!-- Bogeys (Coach 1) -->
-        <rect x="350" y="48" width="60" height="4" rx="2" fill="#334155" />
-        <g class="wheel"><circle cx="365" cy="50" r="6" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="365" cy="50" r="1.5" fill="#64748B"/></g>
-        <g class="wheel"><circle cx="395" cy="50" r="6" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="395" cy="50" r="1.5" fill="#64748B"/></g>
+        <rect x="424" y="55" width="60" height="4" fill="#334155" />
+        <rect x="504" y="55" width="60" height="4" fill="#334155" />
+        <g class="wheel"><circle cx="439" cy="57" r="7" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="439" cy="57" r="2" fill="#64748B"/></g>
+        <g class="wheel"><circle cx="469" cy="57" r="7" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="469" cy="57" r="2" fill="#64748B"/></g>
+        <g class="wheel"><circle cx="519" cy="57" r="7" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="519" cy="57" r="2" fill="#64748B"/></g>
+        <g class="wheel"><circle cx="549" cy="57" r="7" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="549" cy="57" r="2" fill="#64748B"/></g>
 
         <!-- Bogeys (Engine) -->
-        <rect x="530" y="48" width="70" height="4" rx="2" fill="#334155" />
-        <g class="wheel"><circle cx="545" cy="50" r="6" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="545" cy="50" r="1.5" fill="#64748B"/></g>
-        <g class="wheel"><circle cx="585" cy="50" r="6" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="585" cy="50" r="1.5" fill="#64748B"/></g>
+        <rect x="640" y="55" width="70" height="4" fill="#334155" />
+        <rect x="740" y="55" width="60" height="4" fill="#334155" />
+        <g class="wheel"><circle cx="655" cy="57" r="7" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="655" cy="57" r="2" fill="#64748B"/></g>
+        <g class="wheel"><circle cx="690" cy="57" r="7" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="690" cy="57" r="2" fill="#64748B"/></g>
+        <g class="wheel"><circle cx="755" cy="57" r="7" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="755" cy="57" r="2" fill="#64748B"/></g>
+        <g class="wheel"><circle cx="785" cy="57" r="7" fill="#0F172A" stroke="#64748B" stroke-width="1.5"/><circle cx="785" cy="57" r="2" fill="#64748B"/></g>
 
       </svg>
     </div>

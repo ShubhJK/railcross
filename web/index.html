@@ -191,12 +191,6 @@ section{padding:62px 0}
 .tl-warn.open{background:var(--green-bg);color:var(--green-ink)}
 .rc-foot{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding-top:14px;border-top:1px dashed var(--line-2)}
 .rc-note{font-size:.78rem;color:var(--muted);font-weight:600;flex:1}
-.oops-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-bottom:34px}
-.oops-card{background:rgba(255,255,255,.84);border:1.5px solid var(--line);border-radius:var(--radius);padding:20px}
-.oops-icon{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:21px;margin-bottom:13px;background:linear-gradient(140deg,var(--butter-200),var(--butter-300))}
-.oops-card h4{font-size:.98rem;font-weight:800;margin-bottom:6px}
-.oops-card p{font-size:.85rem;color:var(--ink-2)}
-.oops-card code{font-family:var(--mono);font-size:.78rem;background:var(--butter-100);padding:1px 6px;border-radius:5px;color:var(--butter-600)}
 .modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(38,62,54,.55);backdrop-filter:blur(6px);display:grid;place-items:center;padding:22px;opacity:0;visibility:hidden;transition:.25s}
 .modal-overlay.show{opacity:1;visibility:visible}
 .modal{background:linear-gradient(165deg,#FBFDF8,#F1F6DE);border:1.5px solid var(--line-2);border-radius:22px;width:min(560px,100%);max-height:88vh;overflow-y:auto}
@@ -265,7 +259,6 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
       <a href="#home" class="active">Home</a>
       <a href="#live-trains">Live Trains</a>
       <a href="#planner">Route Planner</a>
-      <a href="#oops">OOP Design</a>
     </nav>
     <a href="#live-trains" class="nav-cta">Live Trains</a>
   </div>
@@ -400,24 +393,6 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
   </div>
 </section>
 
-<section id="oops">
-  <div class="container">
-    <div class="section-head">
-      <span class="section-tag">Under the hood</span>
-      <h2>Built on solid Object-Oriented C++</h2>
-      <p>Every crossing is an object. Every route is a composition. The status engine runs on polymorphism.</p>
-    </div>
-    <div class="oops-grid">
-      <div class="oops-card"><div class="oops-icon">🧩</div><h4>Abstraction</h4><p>Abstract base <code>Crossing</code> defines what a crossing must do.</p></div>
-      <div class="oops-card"><div class="oops-icon">🔒</div><h4>Encapsulation</h4><p>Gate status is <code>private</code>. Outside code reads via getters only.</p></div>
-      <div class="oops-card"><div class="oops-icon">🧬</div><h4>Inheritance</h4><p><code>LevelCrossing</code> extends <code>Crossing</code> and reuses its logic.</p></div>
-      <div class="oops-card"><div class="oops-icon">🎭</div><h4>Polymorphism</h4><p><code>expectedWaitSeconds()</code> is virtual — each type computes its own wait.</p></div>
-      <div class="oops-card"><div class="oops-icon">🔗</div><h4>Composition</h4><p>A <code>Route</code> <em>has-a</em> collection of crossings.</p></div>
-      <div class="oops-card"><div class="oops-icon">➕</div><h4>Operator Overloading</h4><p><code>operator&lt;</code> lets <code>std::sort</code> rank routes by real travel time.</p></div>
-    </div>
-  </div>
-</section>
-
 <!-- BOTTOM ANIMATED TRAIN (MATCHA EDITION) -->
 <div class="bottom-railway-wrapper" aria-hidden="true">
   <div class="track-sleepers"></div>
@@ -531,8 +506,8 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
         <div class="foot-brand"><span class="logo-mark">🚦</span> RailCross</div>
         <p>Punjab-focused railway level-crossing information and route-planning platform. OOPS semester project in C++.</p>
       </div>
-      <div class="foot-col"><h5>Product</h5><ul><li><a href="#live-trains">Live Trains</a></li><li><a href="#planner">Route planner</a></li><li><a href="#oops">OOP design</a></li></ul></div>
-      <div class="foot-col"><h5>Project</h5><ul><li><a href="#oops">Class diagram</a></li><li><a href="#oops">Source files</a></li><li><a href="#home">Documentation</a></li></ul></div>
+      <div class="foot-col"><h5>Product</h5><ul><li><a href="#live-trains">Live Trains</a></li><li><a href="#planner">Route planner</a></li></ul></div>
+      <div class="foot-col"><h5>Project</h5><ul><li><a href="#home">Documentation</a></li></ul></div>
       <div class="foot-col">
         <h5>Crossing alerts</h5>
         <form class="foot-sub" id="subscribeForm">
@@ -937,7 +912,7 @@ const navAnchors = $$('#navLinks a');
 new IntersectionObserver(entries => entries.forEach(en => {
   if (en.isIntersecting) navAnchors.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id));
 }), { rootMargin:'-45% 0px -50% 0px' });
-['home','live-trains','planner','oops'].forEach(id => { const el = document.getElementById(id); if (el) el.scrollIntoView; });
+['home','live-trains','planner'].forEach(id => { const el = document.getElementById(id); if (el) el.scrollIntoView; });
 
 async function loadInitialData(){
   try {

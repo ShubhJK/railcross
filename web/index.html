@@ -85,8 +85,6 @@ a{color:inherit}
 .chip-dark { padding: 6px 12px; border-radius: 999px; border: 1px solid #405E52; background: transparent; color: #78866E; font-size: .75rem; font-weight: 700; cursor: pointer; transition: .18s; }
 .chip-dark.active { background: var(--butter-400); color: #1A2D25; border-color: var(--butter-400); }
 .toolbar-dark select { padding: 8px 12px; border-radius: 10px; border: 1px solid #405E52; background: #1F3129; color: #F8F7E9; font-size: .75rem; font-weight: 600; cursor: pointer; outline: none; }
-.btn-simulate-dark { padding: 8px 14px; border-radius: 10px; border: 1px solid #405E52; background: #1F3129; color: var(--butter-300); font-size: .75rem; font-weight: 700; cursor: pointer; transition: .18s; }
-.btn-simulate-dark:hover { background: #263E36; border-color: var(--butter-400); }
 
 /* Board List */
 .board-list { flex: 1; overflow-y: auto; padding-right: 5px; }
@@ -303,7 +301,6 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
           <option value="status">Sort: Closed first</option>
           <option value="trains">Sort: Busiest line</option>
         </select>
-        <button class="btn-simulate-dark" id="simulateBtn">⚡ Simulate</button>
       </div>
 
       <div class="board-list" id="heroBoardList">
@@ -666,16 +663,6 @@ $$('#statusChips .chip-dark').forEach(ch => ch.addEventListener('click', () => {
   renderBoard();
 }));
 $('#sortSelect').addEventListener('change', e => { activeSort = e.target.value; renderBoard(); });
-
-$('#simulateBtn').addEventListener('click', () => {
-  const pool = CROSSINGS.filter(c => c.status !== 'CLOSED');
-  const c = pool.length ? pick(pool) : pick(CROSSINGS);
-  const T = TRANSITIONS[c.status];
-  c.status = T.next; c.secondsToNext = rand(T.min, T.max); c.maxTimer = c.secondsToNext;
-  renderBoard(); renderHeroStats();
-  showToast(`Simulated train at ${c.name} → ${statusLabel(c.status)}.`, '🚆');
-});
-
 
 /* Other Logic (Modal, Planner, etc) */
 const overlay = $('#modalOverlay');

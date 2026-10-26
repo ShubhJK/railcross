@@ -24,7 +24,8 @@ a{color:inherit}
 .nav-links a{padding:9px 15px;border-radius:10px;text-decoration:none;color:var(--ink-2);font-weight:600;font-size:.9rem;transition:.18s}
 .nav-links a:hover{background:rgba(199,221,170,.42)}
 .nav-links a.active{background:var(--ink);color:var(--butter-200)}
-.nav-cta{padding:10px 18px;border-radius:11px;background:var(--ink);color:var(--butter-200);font-weight:700;font-size:.87rem;text-decoration:none;box-shadow:0 5px 16px rgba(38,62,54,.22)}
+/* Removed the redundant .nav-cta */
+
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;border-radius:13px;border:none;cursor:pointer;font-weight:700;font-size:.94rem;font-family:inherit;text-decoration:none;transition:.15s}
 .btn-primary{background:linear-gradient(140deg,#2B3E36,#1A2D25);color:#E6F0C3;box-shadow:0 8px 22px rgba(38,62,54,.26)}
 .btn-ghost{background:rgba(255,255,255,.78);color:var(--ink);border:1.5px solid var(--line-2);box-shadow:var(--shadow-sm)}
@@ -242,7 +243,7 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
 .foot-bottom{padding-top:22px;border-top:1px solid #405E52;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:.78rem;color:#78866E}
 .is-hidden{display:none !important}
 @media (max-width:1020px){.hero-grid{grid-template-columns:1fr}.planner-wrap{grid-template-columns:1fr}.foot-grid{grid-template-columns:1fr 1fr}}
-@media (max-width:760px){.nav-links,.nav-cta{display:none}.hero-stats{grid-template-columns:repeat(2,1fr)}.detail-grid{grid-template-columns:1fr}.foot-grid{grid-template-columns:1fr}.bottom-railway-wrapper{height:80px;margin-top:20px;}.moving-train{animation-duration:15s;width:600px;height:58px;bottom:22px;left:-700px;}}
+@media (max-width:760px){.nav-links{display:none}.hero-stats{grid-template-columns:repeat(2,1fr)}.detail-grid{grid-template-columns:1fr}.foot-grid{grid-template-columns:1fr}.bottom-railway-wrapper{height:80px;margin-top:20px;}.moving-train{animation-duration:15s;width:600px;height:58px;bottom:22px;left:-700px;}}
 </style>
 </head>
 <body>
@@ -258,7 +259,6 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
       <a href="#live-trains">Live Trains</a>
       <a href="#planner">Route Planner</a>
     </nav>
-    <a href="#live-trains" class="nav-cta">Live Trains</a>
   </div>
 </header>
 
@@ -364,11 +364,21 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
     <div class="planner-wrap">
       <form class="planner-form" id="plannerForm">
         <h3>Trip details</h3>
-        <p class="pf-sub">Choose any two Punjab cities.</p>
+        <p class="pf-sub">Choose between cities, or Patiala local.</p>
+        
+        <div class="field">
+          <label for="modeSelect">Mode</label>
+          <select id="modeSelect">
+            <option value="intercity">Intercity (Punjab)</option>
+            <option value="local">Patiala Local</option>
+          </select>
+        </div>
+
         <div class="field"><label for="fromSelect">From</label><select id="fromSelect"></select></div>
         <div class="swap-row"><button type="button" class="swap-btn" id="swapBtn">⇅</button></div>
         <div class="field"><label for="toSelect">To</label><select id="toSelect"></select></div>
-        <div class="field"><label for="departInput">Departure time</label><input type="time" id="departInput" value="09:00" /></div>
+        
+        <div class="field" id="timeField"><label for="departInput">Departure time</label><input type="time" id="departInput" value="09:00" /></div>
         <div class="field"><label for="prioritySelect">Priority</label>
           <select id="prioritySelect">
             <option value="time">Fastest arrival</option>
@@ -396,7 +406,6 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
   <div class="track-bed"></div>
   <div class="moving-train">
     <svg viewBox="0 -10 880 95" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-      
       <!-- Coach 3 -->
       <rect x="20" y="20" width="180" height="35" rx="2" fill="#263E36" />
       <rect x="20" y="42" width="180" height="8" fill="#9DBF7C" />
@@ -406,10 +415,8 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
       <rect x="108" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
       <rect x="134" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
       <rect x="160" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-
       <!-- Gangway 2 -->
       <rect x="200" y="26" width="12" height="23" fill="#1A2D25" />
-
       <!-- Coach 2 -->
       <rect x="212" y="20" width="180" height="35" rx="2" fill="#263E36" />
       <rect x="212" y="42" width="180" height="8" fill="#9DBF7C" />
@@ -419,10 +426,8 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
       <rect x="300" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
       <rect x="326" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
       <rect x="352" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-
       <!-- Gangway 1 -->
       <rect x="392" y="26" width="12" height="23" fill="#1A2D25" />
-
       <!-- Coach 1 -->
       <rect x="404" y="20" width="180" height="35" rx="2" fill="#263E36" />
       <rect x="404" y="42" width="180" height="8" fill="#9DBF7C" />
@@ -432,66 +437,40 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
       <rect x="492" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
       <rect x="518" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
       <rect x="544" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-
       <!-- Engine Gangway -->
       <rect x="584" y="26" width="12" height="23" fill="#1A2D25" />
-
       <!-- Engine (WAP-7 Style) -->
       <path d="M 596 20 L 760 20 Q 790 20 815 40 L 820 55 L 820 55 L 596 55 Z" fill="#263E36" />
-      
-      <!-- Engine Livery (Stripe) -->
       <path d="M 596 42 L 805 42 Q 815 42 818 47 L 820 55 L 596 55 Z" fill="#9DBF7C" />
-      
-      <!-- Engine Roof / Top Box -->
       <rect x="620" y="12" width="100" height="8" rx="2" fill="#35584B" />
-      
-      <!-- Pantograph (Top) -->
       <path d="M 650 12 L 660 2 L 680 2 L 690 12" stroke="#718B5D" stroke-width="2" fill="none" />
       <line x1="670" y1="2" x2="670" y2="-2" stroke="#718B5D" stroke-width="2" />
-      
-      <!-- Engine Vents/Louvers -->
       <rect x="610" y="24" width="40" height="12" rx="2" fill="#1A2D25" />
       <rect x="660" y="24" width="40" height="12" rx="2" fill="#1A2D25" />
-      
-      <!-- Engine Windows -->
       <path d="M 720 24 L 750 24 L 760 34 L 720 34 Z" fill="#E6F0C3" />
       <rect x="770" y="24" width="20" height="10" fill="#E6F0C3" />
-
-      <!-- Headlight -->
       <rect x="812" y="45" width="6" height="4" rx="1" fill="#F8F7E9" />
-
-      <!-- Bogeys (Coach 3) -->
-      <rect x="40" y="55" width="60" height="4" fill="#35584B" />
-      <rect x="120" y="55" width="60" height="4" fill="#35584B" />
+      <!-- Bogeys -->
+      <rect x="40" y="55" width="60" height="4" fill="#35584B" /><rect x="120" y="55" width="60" height="4" fill="#35584B" />
       <g class="wheel"><circle cx="55" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="55" cy="57" r="2" fill="#718B5D"/></g>
       <g class="wheel"><circle cx="85" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="85" cy="57" r="2" fill="#718B5D"/></g>
       <g class="wheel"><circle cx="135" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="135" cy="57" r="2" fill="#718B5D"/></g>
       <g class="wheel"><circle cx="165" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="165" cy="57" r="2" fill="#718B5D"/></g>
-      
-      <!-- Bogeys (Coach 2) -->
-      <rect x="232" y="55" width="60" height="4" fill="#35584B" />
-      <rect x="312" y="55" width="60" height="4" fill="#35584B" />
+      <rect x="232" y="55" width="60" height="4" fill="#35584B" /><rect x="312" y="55" width="60" height="4" fill="#35584B" />
       <g class="wheel"><circle cx="247" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="247" cy="57" r="2" fill="#718B5D"/></g>
       <g class="wheel"><circle cx="277" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="277" cy="57" r="2" fill="#718B5D"/></g>
       <g class="wheel"><circle cx="327" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="327" cy="57" r="2" fill="#718B5D"/></g>
       <g class="wheel"><circle cx="357" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="357" cy="57" r="2" fill="#718B5D"/></g>
-
-      <!-- Bogeys (Coach 1) -->
-      <rect x="424" y="55" width="60" height="4" fill="#35584B" />
-      <rect x="504" y="55" width="60" height="4" fill="#35584B" />
+      <rect x="424" y="55" width="60" height="4" fill="#35584B" /><rect x="504" y="55" width="60" height="4" fill="#35584B" />
       <g class="wheel"><circle cx="439" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="439" cy="57" r="2" fill="#718B5D"/></g>
       <g class="wheel"><circle cx="469" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="469" cy="57" r="2" fill="#718B5D"/></g>
       <g class="wheel"><circle cx="519" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="519" cy="57" r="2" fill="#718B5D"/></g>
       <g class="wheel"><circle cx="549" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="549" cy="57" r="2" fill="#718B5D"/></g>
-
-      <!-- Bogeys (Engine) -->
-      <rect x="640" y="55" width="70" height="4" fill="#35584B" />
-      <rect x="740" y="55" width="60" height="4" fill="#35584B" />
+      <rect x="640" y="55" width="70" height="4" fill="#35584B" /><rect x="740" y="55" width="60" height="4" fill="#35584B" />
       <g class="wheel"><circle cx="655" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="655" cy="57" r="2" fill="#718B5D"/></g>
       <g class="wheel"><circle cx="690" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="690" cy="57" r="2" fill="#718B5D"/></g>
       <g class="wheel"><circle cx="755" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="755" cy="57" r="2" fill="#718B5D"/></g>
       <g class="wheel"><circle cx="785" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="785" cy="57" r="2" fill="#718B5D"/></g>
-
     </svg>
   </div>
 </div>
@@ -537,6 +516,20 @@ const API_BASE = (location.protocol === 'file:') ? 'http://localhost:8080' : '';
 
 let CROSSINGS = [];
 let CITIES = [];
+
+/* PATIALA LOCAL ROUTING DATA */
+const PATIALA_LOCATIONS = [
+  "Baradari Gardens", "Thapar University", "Leela Bhawan", "Passey Road",
+  "Dukhniwaran Sahib", "Patiala Cantt", "Model Town", "Bhupindra Road"
+];
+
+const LOCAL_ROUTES = [
+  { from: "Baradari Gardens", to: "Thapar University", crossingId: "PB-PTA-021", bypass: "Via Leela Bhawan / Passey Road", dist: 8, bypassDist: 11, time: 15, bypassTime: 20 },
+  { from: "Thapar University", to: "Baradari Gardens", crossingId: "PB-PTA-021", bypass: "Via Passey Road / Leela Bhawan", dist: 8, bypassDist: 11, time: 15, bypassTime: 20 },
+  { from: "Patiala Cantt", to: "Dukhniwaran Sahib", crossingId: "PB-PTA-023", bypass: "Via Model Town Flyover", dist: 6, bypassDist: 9, time: 12, bypassTime: 16 },
+  { from: "Dukhniwaran Sahib", to: "Patiala Cantt", crossingId: "PB-PTA-023", bypass: "Via Model Town Flyover", dist: 6, bypassDist: 9, time: 12, bypassTime: 16 },
+  { from: "Leela Bhawan", to: "Patiala Cantt", crossingId: "PB-PTA-024", bypass: "Via Sangrur Bypass", dist: 5, bypassDist: 8, time: 10, bypassTime: 14 }
+];
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -597,11 +590,9 @@ const TRANSITIONS = { OPEN:{next:'CLOSING',min:35,max:95}, CLOSING:{next:'CLOSED
 const boardList = $('#heroBoardList');
 let activeFilter = 'ALL', activeSort = 'name', searchTerm = '';
 
-/* Render the Board (replacing the old grid) */
 function renderBoard(){
   const order = { CLOSED:0, CLOSING:1, OPEN:2 };
   
-  // 1. Filter
   let filtered = CROSSINGS.filter(c => {
     const ms = activeFilter === 'ALL' || c.status === activeFilter;
     const hay = (c.name + ' ' + c.city + ' ' + c.state + ' ' + c.line + ' ' + c.id + ' ' + c.landmark).toLowerCase();
@@ -609,7 +600,6 @@ function renderBoard(){
     return ms && mt;
   });
 
-  // 2. Sort
   filtered.sort((a, b) => {
     if (activeSort === 'name') return a.name.localeCompare(b.name);
     if (activeSort === 'trains') return b.dailyTrains - a.dailyTrains;
@@ -618,7 +608,6 @@ function renderBoard(){
     return 0;
   });
 
-  // 3. Render
   if (filtered.length === 0) {
     boardList.innerHTML = `<div class="empty-state"><b>No crossings match</b>Try a different filter or search.</div>`;
     return;
@@ -627,7 +616,6 @@ function renderBoard(){
   boardList.innerHTML = filtered.map(c => {
     const key = statusKey(c.status);
     let t = c.status === 'OPEN' ? `closes ~${fmtTime(c.secondsToNext || 0)}` : c.status === 'CLOSING' ? `closing ${fmtTime(c.secondsToNext || 0)}` : `reopens ${fmtTime(c.secondsToNext || 0)}`;
-    
     return `
       <div class="board-row">
         <span class="br-pill pill-${key}"></span>
@@ -641,7 +629,6 @@ function renderBoard(){
   }).join('');
 }
 
-// Update stats
 function renderHeroStats(){
   const total = CROSSINGS.length;
   const open = CROSSINGS.filter(c => c.status === 'OPEN').length;
@@ -654,7 +641,6 @@ function renderHeroStats(){
     <div class="stat a"><b>${avg}m</b><span>Avg wait</span></div>`;
 }
 
-// Wire up toolbar events
 $('#searchInput').addEventListener('input', e => { searchTerm = e.target.value.trim().toLowerCase(); renderBoard(); });
 $$('#statusChips .chip-dark').forEach(ch => ch.addEventListener('click', () => {
   $$('#statusChips .chip-dark').forEach(c => c.classList.remove('active'));
@@ -664,7 +650,8 @@ $$('#statusChips .chip-dark').forEach(ch => ch.addEventListener('click', () => {
 }));
 $('#sortSelect').addEventListener('change', e => { activeSort = e.target.value; renderBoard(); });
 
-/* Other Logic (Modal, Planner, etc) */
+
+/* ROUTE PLANNER & MODAL */
 const overlay = $('#modalOverlay');
 let watched = new Set();
 
@@ -691,16 +678,10 @@ function openModal(id){
     <div class="alt-box"><span>Recommended alternate route</span><strong>${c.alternateRoute}</strong></div>
     <div class="modal-actions">
       <button class="btn btn-primary" id="modalNotify">🔔 Notify me when open</button>
-      <button class="btn btn-ghost" id="modalPlan">🗺️ Plan route around it</button>
     </div>`;
   $('#modalNotify').addEventListener('click', () => {
     if (watched.has(c.id)){ watched.delete(c.id); showToast(`Alerts off for ${c.name}.`, '🔕'); }
     else { watched.add(c.id); showToast(`We'll alert you when ${c.name} reopens.`, '🔔'); }
-  });
-  $('#modalPlan').addEventListener('click', () => {
-    closeModal();
-    if (CITIES.some(x => x.name === c.city)){ fromSelect.value = c.city; document.getElementById('plannerForm').dispatchEvent(new Event('submit', { cancelable:true })); }
-    document.getElementById('planner').scrollIntoView({ behavior:'smooth' });
   });
   overlay.classList.add('show');
   document.body.style.overflow = 'hidden';
@@ -710,13 +691,25 @@ $('#modalClose').addEventListener('click', closeModal);
 overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
+
+const modeSelect = $('#modeSelect');
 const fromSelect = $('#fromSelect'), toSelect = $('#toSelect');
 
-function populateCitySelects(){
-  const opts = CITIES.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-  fromSelect.innerHTML = opts; toSelect.innerHTML = opts;
-  fromSelect.value = 'Patiala'; toSelect.value = 'Chandigarh';
+function populateSelects() {
+  if (modeSelect.value === 'local') {
+    const opts = PATIALA_LOCATIONS.map(c => `<option value="${c}">${c}</option>`).join('');
+    fromSelect.innerHTML = opts; toSelect.innerHTML = opts;
+    fromSelect.value = 'Baradari Gardens'; toSelect.value = 'Thapar University';
+    $('#timeField').style.display = 'none';
+  } else {
+    const opts = CITIES.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+    fromSelect.innerHTML = opts; toSelect.innerHTML = opts;
+    fromSelect.value = 'Patiala'; toSelect.value = 'Chandigarh';
+    $('#timeField').style.display = 'block';
+  }
 }
+
+modeSelect.addEventListener('change', populateSelects);
 
 function crossingDelay(c){
   if (c.status === 'OPEN') return c.avgWaitMinutes * 0.35;
@@ -725,7 +718,57 @@ function crossingDelay(c){
 }
 function crossingForCity(city){ return CROSSINGS.find(c => c.city === city) || null; }
 
-function planRoutes(fromName, toName){
+function renderRoutes(routes, fromName, toName, departTime, isLocal){
+  const c = $('#resultsContainer');
+  if (!routes.length){ c.innerHTML = '<div class="empty-state"><b>No routes available</b>Choose two different locations.</div>'; return; }
+  const priority = $('#prioritySelect').value;
+  
+  const ranked = [...routes].sort((a, b) => {
+    if (priority === 'crossings' && a.crossings.length !== b.crossings.length) return a.crossings.length - b.crossings.length;
+    return a.totalMinutes - b.totalMinutes;
+  });
+  
+  const best = ranked[0].id;
+  $('#resultsTitle').textContent = `${fromName} → ${toName}`;
+  $('#resultsSub').textContent = isLocal ? `Local trip · ${ranked.length} options` : `Departing ${departTime} · ${ranked.length} options`;
+  
+  c.innerHTML = ranked.map((r, i) => {
+    const isBest = r.id === best;
+    const th = Math.floor(r.totalMinutes / 60), tm = Math.round(r.totalMinutes % 60), dm = Math.round(r.delay);
+    const tl = [];
+    tl.push(`<div class="tl-item"><span class="tl-node start"></span><div class="tl-body"><div class="tl-title">Start · ${fromName}</div></div></div>`);
+    
+    if (r.crossings.length === 0) {
+      tl.push(`<div class="tl-item"><span class="tl-node open"></span><div class="tl-body"><div class="tl-title">No level crossings</div><span class="tl-warn open">✅ Clear run</span></div></div>`);
+    } else {
+      r.crossings.forEach(({ crossing, delay }) => {
+        const k = statusKey(crossing.status);
+        const wt = crossing.status === 'OPEN' ? `Likely clear · ~${Math.round(delay)} min risk` : crossing.status === 'CLOSING' ? `Closing soon · ~${Math.round(delay)} min wait` : `Gate down · ~${Math.round(delay)} min wait`;
+        tl.push(`<div class="tl-item"><span class="tl-node ${k}"></span><div class="tl-body"><div class="tl-title">${crossing.name}</div><div class="tl-sub">${crossing.landmark}</div><span class="tl-warn ${k}">${wt}</span></div></div>`);
+      });
+    }
+    
+    tl.push(`<div class="tl-item"><span class="tl-node end"></span><div class="tl-body"><div class="tl-title">Arrive · ${toName}</div><div class="tl-sub">Approx. ${th}h ${tm}m total</div></div></div>`);
+    
+    const note = r.crossings.length === 0 ? 'Route bypasses all monitored crossings.' : r.riskCount === 0 ? 'All crossings currently open. Low risk.' : `${r.riskCount} crossing${r.riskCount > 1 ? 's' : ''} currently not open. Consider bypass.`;
+    
+    return `<article class="route-card ${isBest ? 'best' : ''}">
+      <div class="rc-head">
+        <div><div class="rc-title">${r.name}<span class="rc-tag">${r.tag}</span></div></div>
+        <div class="rc-metrics">
+          <div class="rc-metric"><b>${Math.round(r.distanceKm)}</b><span>km</span></div>
+          <div class="rc-metric"><b>${th}h ${tm}m</b><span>total time</span></div>
+          <div class="rc-metric delay"><b>+${dm}m</b><span>crossing delay</span></div>
+        </div>
+      </div>
+      <div class="timeline">${tl.join('')}</div>
+      <div class="rc-foot"><span class="rc-note">${note}</span></div>
+    </article>`;
+  }).join('');
+}
+
+// INTERCITY LOGIC
+function planIntercityRoutes(fromName, toName){
   const from = CITIES.find(c => c.name === fromName);
   const to = CITIES.find(c => c.name === toName);
   if (!from || !to) return [];
@@ -749,51 +792,60 @@ function planRoutes(fromName, toName){
     const dist = road * t.dm, baseTime = base * t.tm;
     let delay = 0;
     const det = cs.map(c => { const d = crossingDelay(c); delay += d; return { crossing:c, delay:d }; });
-    return { id:t.name, name:t.name, tag:t.tag, distanceKm:dist, baseTime, delay, totalMinutes: baseTime + delay, crossings:det, riskCount: cs.filter(c => c.status !== 'OPEN').length, intermediateCity: midCity.name };
+    return { id:t.name, name:t.name, tag:t.tag, distanceKm:dist, baseTime, delay, totalMinutes: baseTime + delay, crossings:det, riskCount: cs.filter(c => c.status !== 'OPEN').length };
   });
 }
 
-function renderRoutes(routes, fromName, toName, departTime){
-  const c = $('#resultsContainer');
-  if (!routes.length){ c.innerHTML = '<div class="empty-state"><b>No routes available</b>Choose two different cities.</div>'; return; }
-  const priority = $('#prioritySelect').value;
-  const ranked = [...routes].sort((a, b) => priority === 'crossings' && a.crossings.length !== b.crossings.length ? a.crossings.length - b.crossings.length : a.totalMinutes - b.totalMinutes);
-  const best = ranked[0].id;
-  $('#resultsTitle').textContent = `${fromName} → ${toName}`;
-  $('#resultsSub').textContent = `Departing ${departTime} · ${ranked.length} options`;
-  c.innerHTML = ranked.map((r, i) => {
-    const isBest = r.id === best;
-    const th = Math.floor(r.totalMinutes / 60), tm = Math.round(r.totalMinutes % 60), dm = Math.round(r.delay);
-    const tl = [];
-    tl.push(`<div class="tl-item"><span class="tl-node start"></span><div class="tl-body"><div class="tl-title">Start · ${fromName}</div><div class="tl-sub">Departure at ${departTime}</div></div></div>`);
-    if (r.crossings.length === 0) tl.push(`<div class="tl-item"><span class="tl-node open"></span><div class="tl-body"><div class="tl-title">No level crossings</div><div class="tl-sub">Fully grade-separated corridor</div><span class="tl-warn open">✅ Clear run</span></div></div>`);
-    else r.crossings.forEach(({ crossing, delay }) => {
-      const k = statusKey(crossing.status);
-      const wt = crossing.status === 'OPEN' ? `Likely clear · ~${Math.round(delay)} min risk` : crossing.status === 'CLOSING' ? `Closing soon · ~${Math.round(delay)} min wait` : `Gate down · ~${Math.round(delay)} min wait`;
-      tl.push(`<div class="tl-item"><span class="tl-node ${k}"></span><div class="tl-body"><div class="tl-title">${crossing.name}</div><div class="tl-sub">${crossing.landmark} · ${crossing.line}</div><span class="tl-warn ${k}">${wt}</span></div></div>`);
-    });
-    tl.push(`<div class="tl-item"><span class="tl-node end"></span><div class="tl-body"><div class="tl-title">Arrive · ${toName}</div><div class="tl-sub">Approx. ${th}h ${tm}m total</div></div></div>`);
-    const note = r.crossings.length === 0 ? 'Bypass avoids all monitored crossings — longer distance, no gate risk.' : r.riskCount === 0 ? 'All crossings currently open. Low risk right now.' : `${r.riskCount} crossing${r.riskCount > 1 ? 's' : ''} currently not open. Consider the bypass.`;
-    return `<article class="route-card ${isBest ? 'best' : ''}">
-      <div class="rc-head">
-        <div><div class="rc-title">${r.name}<span class="rc-tag">${r.tag}</span></div></div>
-        <div class="rc-metrics">
-          <div class="rc-metric"><b>${Math.round(r.distanceKm)}</b><span>km</span></div>
-          <div class="rc-metric"><b>${th}h ${tm}m</b><span>total time</span></div>
-          <div class="rc-metric delay"><b>+${dm}m</b><span>crossing delay</span></div>
-        </div>
-      </div>
-      <div class="timeline">${tl.join('')}</div>
-      <div class="rc-foot"><span class="rc-note">${note}</span><button class="btn btn-ghost btn-sm js-route-detail">View crossings</button></div>
-    </article>`;
-  }).join('');
-  $$('.js-route-detail').forEach(b => b.addEventListener('click', () => {
-    const route = ranked.find(r => r.name === b.closest('.route-card').querySelector('.rc-title').textContent.split('[')[0].trim().trim());
-    if (route && route.crossings.length > 0) openModal(route.crossings[0].crossing.id);
-    else showToast('No monitored crossings on this route.', '✅');
-  }));
+// INTRA-CITY (LOCAL) LOGIC
+function planLocalRoutes(fromName, toName){
+  let routeData = LOCAL_ROUTES.find(r => r.from === fromName && r.to === toName);
+  
+  if (!routeData) {
+    routeData = { from: fromName, to: toName, crossingId: "PB-PTA-020", bypass: "Via City Bypass Road", dist: 5, bypassDist: 7, time: 12, bypassTime: 18 };
+  }
+
+  const crossing = CROSSINGS.find(c => c.id === routeData.crossingId);
+  if (!crossing) return [];
+
+  const cDelay = crossingDelay(crossing);
+  const directTime = routeData.time + cDelay;
+  const bypassTime = routeData.bypassTime;
+
+  return [
+    {
+      id: 'direct', name: 'Direct Route', tag: 'Shortest path',
+      distanceKm: routeData.dist, baseTime: routeData.time, delay: cDelay,
+      totalMinutes: directTime, crossings: [{ crossing, delay: cDelay }], riskCount: crossing.status !== 'OPEN' ? 1 : 0
+    },
+    {
+      id: 'bypass', name: routeData.bypass, tag: 'Bypass route',
+      distanceKm: routeData.bypassDist, baseTime: routeData.bypassTime, delay: 0,
+      totalMinutes: bypassTime, crossings: [], riskCount: 0
+    }
+  ];
 }
 
+$('#swapBtn').addEventListener('click', () => { const a = fromSelect.value; fromSelect.value = toSelect.value; toSelect.value = a; });
+$('#plannerForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const f = fromSelect.value, t = toSelect.value;
+  if (f === t){ showToast('Origin and destination must be different.', '⚠️'); return; }
+  
+  if (modeSelect.value === 'local') {
+    renderRoutes(planLocalRoutes(f, t), f, t, 'Local', true);
+  } else {
+    renderRoutes(planIntercityRoutes(f, t), f, t, $('#departInput').value || '09:00', false);
+  }
+});
+$('#subscribeForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const em = $('#subscribeEmail').value.trim(); if (!em) return;
+  showToast(`Alerts will be sent to ${em}.`, '📬');
+  e.target.reset();
+});
+
+
+/* LIVE RAILRADAR API LOGIC */
 async function loadLiveTrains() {
   const stn  = document.getElementById('liveStationSelect').value;
   const hrs  = document.getElementById('liveHoursSelect').value;
@@ -878,22 +930,8 @@ async function loadLiveTrains() {
     console.error('[RailRadar]', e);
   }
 }
-
 document.getElementById('loadLiveBtn').addEventListener('click', loadLiveTrains);
 
-$('#swapBtn').addEventListener('click', () => { const a = fromSelect.value; fromSelect.value = toSelect.value; toSelect.value = a; });
-$('#plannerForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const f = fromSelect.value, t = toSelect.value;
-  if (f === t){ showToast('Origin and destination must be different.', '⚠️'); return; }
-  renderRoutes(planRoutes(f, t), f, t, $('#departInput').value || '09:00');
-});
-$('#subscribeForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const em = $('#subscribeEmail').value.trim(); if (!em) return;
-  showToast(`Alerts will be sent to ${em}.`, '📬');
-  e.target.reset();
-});
 
 const navAnchors = $$('#navLinks a');
 new IntersectionObserver(entries => entries.forEach(en => {
@@ -915,7 +953,7 @@ async function loadInitialData(){
   }
   renderHeroStats();
   renderBoard();
-  populateCitySelects();
+  populateSelects();
 }
 
 function tick(){

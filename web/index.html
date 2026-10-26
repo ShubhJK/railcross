@@ -526,7 +526,7 @@ const API_BASE = (location.protocol === 'file:') ? 'http://localhost:8080' : '';
 let CROSSINGS = [];
 let CITIES = [];
 
-/* PATIALA LOCAL ROUTING DATA - ACCURATE DISTANCES */
+/* PATIALA LOCAL ROUTING DATA - ACCURATE GEOGRAPHY */
 const PATIALA_LOCATIONS = [
   "Model Town", "Thapar University", "Baradari Gardens", "Leela Bhawan", 
   "Passy Road", "Dukhniwaran Sahib", "Patiala Cantt", "Bhupindra Road",
@@ -534,47 +534,51 @@ const PATIALA_LOCATIONS = [
 ];
 
 const LOCAL_ROUTES = [
-  // Model Town to Thapar (~2.5 km, 7 mins)
-  { from: "Model Town", to: "Thapar University", crossingId: "PB-PTA-020", bypass: "Via Bhupindra Road (No crossing)", dist: 2.5, bypassDist: 2.8, time: 7, bypassTime: 9 },
-  { from: "Thapar University", to: "Model Town", crossingId: "PB-PTA-020", bypass: "Via Bhupindra Road (No crossing)", dist: 2.5, bypassDist: 2.8, time: 7, bypassTime: 9 },
+  // Model Town to Thapar (Crosses 23 No. Phatak, not 20!)
+  { from: "Model Town", to: "Thapar University", crossingId: "PB-PTA-023", bypass: "Via Model Town Flyover", dist: 3.2, bypassDist: 4.5, time: 9, bypassTime: 13 },
+  { from: "Thapar University", to: "Model Town", crossingId: "PB-PTA-023", bypass: "Via Model Town Flyover", dist: 3.2, bypassDist: 4.5, time: 9, bypassTime: 13 },
   
-  // Model Town to Baradari (~2.2 km, 6 mins)
+  // Baradari to Thapar (Crosses 20 No. Phatak)
+  { from: "Baradari Gardens", to: "Thapar University", crossingId: "PB-PTA-020", bypass: "Via Leela Bhawan / Passy Road", dist: 3.5, bypassDist: 4.5, time: 10, bypassTime: 14 },
+  { from: "Thapar University", to: "Baradari Gardens", crossingId: "PB-PTA-020", bypass: "Via Leela Bhawan / Passy Road", dist: 3.5, bypassDist: 4.5, time: 10, bypassTime: 14 },
+
+  // Patiala Cantt to Thapar (Crosses 24 No. Phatak)
+  { from: "Patiala Cantt", to: "Thapar University", crossingId: "PB-PTA-024", bypass: "Via Sangrur Bypass", dist: 4.2, bypassDist: 5.5, time: 11, bypassTime: 15 },
+  { from: "Thapar University", to: "Patiala Cantt", crossingId: "PB-PTA-024", bypass: "Via Sangrur Bypass", dist: 4.2, bypassDist: 5.5, time: 11, bypassTime: 15 },
+
+  // Model Town to Baradari (Crosses 20)
   { from: "Model Town", to: "Baradari Gardens", crossingId: "PB-PTA-020", bypass: "Via Leela Bhawan Chowk", dist: 2.2, bypassDist: 3.1, time: 6, bypassTime: 10 },
   { from: "Baradari Gardens", to: "Model Town", crossingId: "PB-PTA-020", bypass: "Via Leela Bhawan Chowk", dist: 2.2, bypassDist: 3.1, time: 6, bypassTime: 10 },
   
-  // Model Town to Leela Bhawan (~1.5 km, 4 mins)
+  // Model Town to Leela Bhawan (Crosses 20)
   { from: "Model Town", to: "Leela Bhawan", crossingId: "PB-PTA-020", bypass: "Via Baradari", dist: 1.5, bypassDist: 2.2, time: 4, bypassTime: 7 },
   { from: "Leela Bhawan", to: "Model Town", crossingId: "PB-PTA-020", bypass: "Via Baradari", dist: 1.5, bypassDist: 2.2, time: 4, bypassTime: 7 },
 
-  // Thapar to Passy Road (~2.8 km, 8 mins)
+  // Thapar to Passy Road (Crosses 21)
   { from: "Thapar University", to: "Passy Road", crossingId: "PB-PTA-021", bypass: "Via Dukhniwaran Road", dist: 2.8, bypassDist: 4.0, time: 8, bypassTime: 12 },
   { from: "Passy Road", to: "Thapar University", crossingId: "PB-PTA-021", bypass: "Via Dukhniwaran Road", dist: 2.8, bypassDist: 4.0, time: 8, bypassTime: 12 },
 
-  // Thapar to Dukhniwaran (~3.2 km, 9 mins)
+  // Thapar to Dukhniwaran (Crosses 21)
   { from: "Thapar University", to: "Dukhniwaran Sahib", crossingId: "PB-PTA-021", bypass: "Via Sirhind Road Bypass", dist: 3.2, bypassDist: 4.5, time: 9, bypassTime: 13 },
   { from: "Dukhniwaran Sahib", to: "Thapar University", crossingId: "PB-PTA-021", bypass: "Via Sirhind Road Bypass", dist: 3.2, bypassDist: 4.5, time: 9, bypassTime: 13 },
 
-  // Thapar to Patiala Cantt (~4.5 km, 12 mins)
-  { from: "Thapar University", to: "Patiala Cantt", crossingId: "PB-PTA-021", bypass: "Via Leela Bhawan", dist: 4.5, bypassDist: 5.8, time: 12, bypassTime: 15 },
-  { from: "Patiala Cantt", to: "Thapar University", crossingId: "PB-PTA-021", bypass: "Via Leela Bhawan", dist: 4.5, bypassDist: 5.8, time: 12, bypassTime: 15 },
-
-  // Patiala Cantt to Dukhniwaran (~2.8 km, 7 mins)
+  // Patiala Cantt to Dukhniwaran (Crosses 23)
   { from: "Patiala Cantt", to: "Dukhniwaran Sahib", crossingId: "PB-PTA-023", bypass: "Via Model Town Flyover", dist: 2.8, bypassDist: 3.5, time: 7, bypassTime: 10 },
   { from: "Dukhniwaran Sahib", to: "Patiala Cantt", crossingId: "PB-PTA-023", bypass: "Via Model Town Flyover", dist: 2.8, bypassDist: 3.5, time: 7, bypassTime: 10 },
   
-  // Leela Bhawan to Patiala Cantt (~3.2 km, 8 mins)
+  // Leela Bhawan to Patiala Cantt (Crosses 24)
   { from: "Leela Bhawan", to: "Patiala Cantt", crossingId: "PB-PTA-024", bypass: "Via 22 No. Phatak Bypass", dist: 3.2, bypassDist: 4.8, time: 8, bypassTime: 12 },
   { from: "Patiala Cantt", to: "Leela Bhawan", crossingId: "PB-PTA-024", bypass: "Via 22 No. Phatak Bypass", dist: 3.2, bypassDist: 4.8, time: 8, bypassTime: 12 },
 
-  // Qila Mubarak to Bus Stand (~1.8 km, 5 mins)
+  // Qila Mubarak to Bus Stand (Crosses 19)
   { from: "Qila Mubarak", to: "Patiala Bus Stand", crossingId: "PB-PTA-019", bypass: "Via Leela Bhawan", dist: 1.8, bypassDist: 2.5, time: 5, bypassTime: 8 },
   { from: "Patiala Bus Stand", to: "Qila Mubarak", crossingId: "PB-PTA-019", bypass: "Via Leela Bhawan", dist: 1.8, bypassDist: 2.5, time: 5, bypassTime: 8 },
 
-  // Sheesh Mahal to Baradari (~2.0 km, 6 mins)
+  // Sheesh Mahal to Baradari (Crosses 20)
   { from: "Sheesh Mahal", to: "Baradari Gardens", crossingId: "PB-PTA-020", bypass: "Via Fort Road", dist: 2.0, bypassDist: 2.8, time: 6, bypassTime: 9 },
   { from: "Baradari Gardens", to: "Sheesh Mahal", crossingId: "PB-PTA-020", bypass: "Via Fort Road", dist: 2.0, bypassDist: 2.8, time: 6, bypassTime: 9 },
 
-  // 22 No. Phatak to Model Town (~1.2 km, 4 mins)
+  // 22 No. Phatak to Model Town (Crosses 22)
   { from: "22 No. Phatak", to: "Model Town", crossingId: "PB-PTA-022", bypass: "Via Urban Estate", dist: 1.2, bypassDist: 2.5, time: 4, bypassTime: 7 },
   { from: "Model Town", to: "22 No. Phatak", crossingId: "PB-PTA-022", bypass: "Via Urban Estate", dist: 1.2, bypassDist: 2.5, time: 4, bypassTime: 7 }
 ];

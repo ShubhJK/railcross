@@ -24,7 +24,6 @@ a{color:inherit}
 .nav-links a{padding:9px 15px;border-radius:10px;text-decoration:none;color:var(--ink-2);font-weight:600;font-size:.9rem;transition:.18s}
 .nav-links a:hover{background:rgba(199,221,170,.42)}
 .nav-links a.active{background:var(--ink);color:var(--butter-200)}
-/* Removed the redundant .nav-cta */
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;border-radius:13px;border:none;cursor:pointer;font-weight:700;font-size:.94rem;font-family:inherit;text-decoration:none;transition:.15s}
 .btn-primary{background:linear-gradient(140deg,#2B3E36,#1A2D25);color:#E6F0C3;box-shadow:0 8px 22px rgba(38,62,54,.26)}
@@ -267,7 +266,17 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
     
     <!-- Left Side: Text & Stats -->
     <div>
-      <span class="eyebrow">🇮🇳 Punjab-first · Patiala deep coverage</span>
+      <span class="eyebrow">
+        <!-- Real SVG Indian Flag instead of Emoji -->
+        <svg width="18" height="12" viewBox="0 0 30 20" style="border-radius:2px; margin-right:2px;">
+          <rect width="30" height="6.66" fill="#FF9933"/>
+          <rect y="6.66" width="30" height="6.66" fill="#FFFFFF"/>
+          <rect y="13.33" width="30" height="6.66" fill="#138808"/>
+          <circle cx="15" cy="10" r="2.5" fill="none" stroke="#000080" stroke-width="0.5"/>
+          <path d="M15 7.5v5M12.5 10h5M13.2 8.2l3.6 3.6M13.2 11.8l3.6-3.6" stroke="#000080" stroke-width="0.3"/>
+        </svg>
+        Patiala Local & Punjab Intercity
+      </span>
       <h1>Never get stuck at a <span class="hl">railway crossing</span> again.</h1>
       <p class="lede">RailCross tells you whether a level crossing is <strong>open</strong>, <strong>about to close</strong>, or already <strong>closed</strong> — and exactly how long until it reopens. Then it plans a route that actually gets you there.</p>
       <div class="hero-cta">

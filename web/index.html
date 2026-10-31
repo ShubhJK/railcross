@@ -721,19 +721,33 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
   // ==========================================
   // 3. ROUTE PLANNER LOGIC
   // ==========================================
-  const cities = ["Patiala", "Rajpura", "Sirhind", "Ludhiana", "Jalandhar", "Amritsar", "Bathinda", "Chandigarh"];
+  const intercityCities = ["Patiala", "Rajpura", "Sirhind", "Ludhiana", "Jalandhar", "Amritsar", "Bathinda", "Chandigarh"];
+  const localLocations = ["Thapar University", "Leela Bhawan", "22 No. Phatak", "Urban Estate", "Patiala Railway Station", "Baradari Gardens"];
+  
+  const modeSelect = document.getElementById('modeSelect');
   const fromSelect = document.getElementById('fromSelect');
   const toSelect = document.getElementById('toSelect');
   const swapBtn = document.getElementById('swapBtn');
   const plannerForm = document.getElementById('plannerForm');
   const resultsContainer = document.getElementById('resultsContainer');
 
-  // Populate dropdowns
-  cities.forEach(city => {
-    fromSelect.innerHTML += `<option value="${city}">${city}</option>`;
-    toSelect.innerHTML += `<option value="${city}">${city}</option>`;
+  function populateDropdowns(mode) {
+    const list = mode === 'local' ? localLocations : intercityCities;
+    fromSelect.innerHTML = '';
+    toSelect.innerHTML = '';
+    list.forEach(loc => {
+      fromSelect.innerHTML += `<option value="${loc}">${loc}</option>`;
+      toSelect.innerHTML += `<option value="${loc}">${loc}</option>`;
+    });
+    if (list.length > 1) toSelect.selectedIndex = 1;
+  }
+
+  // Initialize dropdowns
+  populateDropdowns('intercity');
+
+  modeSelect.addEventListener('change', (e) => {
+    populateDropdowns(e.target.value);
   });
-  toSelect.value = "Rajpura"; // Default destination
 
   swapBtn.addEventListener('click', () => {
     let temp = fromSelect.value;

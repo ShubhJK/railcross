@@ -6,6 +6,7 @@
 <title>RailKross — Punjab Level Crossing Status & Route Planner</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%A6%3C/text%3E%3C/svg%3E" />
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- ADDED PAPAPARSE FOR KAGGLE DATASET -->
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <style>
 :root{--butter-50:#F8F7E9;--butter-100:#E6F0C3;--butter-200:#C7DDAA;--butter-300:#A7BC9A;--butter-400:#9DBF7C;--butter-500:#718B5D;--butter-600:#526743;--butter-700:#3E5232;--ink:#263E36;--ink-2:#526753;--muted:#78866E;--line:#DCE6C8;--line-2:#C7DDAA;--green:#1F9D55;--green-bg:#DCF5E5;--green-ink:#0F6B39;--amber:#E08A00;--amber-bg:#FFF0D2;--amber-ink:#8F5600;--red:#D64545;--red-bg:#FFE3E3;--red-ink:#9E2323;--radius:18px;--shadow-sm:0 2px 10px rgba(140,110,20,.07);--shadow:0 6px 26px rgba(140,110,20,.11);--shadow-lg:0 18px 50px rgba(140,110,20,.18);--mono:'JetBrains Mono',ui-monospace,Menlo,monospace;}
@@ -47,9 +48,33 @@ a{color:inherit}
 .stat.g b{color:var(--green-ink)} .stat.r b{color:var(--red-ink)} .stat.a b{color:var(--amber-ink)}
 
 /* MERGED BOARD & TOOLBAR */
-.board-wrapper { background: linear-gradient(165deg,#2B3E36,#1A2D25); border: 1px solid #405E52; border-radius: 22px; padding: 20px; box-shadow: var(--shadow-lg); color: #F8F7E9; position: relative; z-index: 3; display: flex; flex-direction: column; height: 600px; }
-.board-header-row { display: flex; align-items: center; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid #405E52; margin-bottom: 14px; }
-.board-title { display: flex; align-items: center; gap: 9px; font-size: .72rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; color: var(--butter-300); }
+.board-wrapper {
+  background: linear-gradient(165deg,#2B3E36,#1A2D25);
+  border: 1px solid #405E52;
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: var(--shadow-lg);
+  color: #F8F7E9;
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  height: 600px;
+}
+.board-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #405E52;
+  margin-bottom: 14px;
+}
+.board-title {
+  display: flex; align-items: center; gap: 9px;
+  font-size: .72rem; font-weight: 800;
+  letter-spacing: .13em; text-transform: uppercase;
+  color: var(--butter-300);
+}
 .board-clock { font-family: var(--mono); font-size: .72rem; color: #78866E; }
 
 /* Dark Toolbar */
@@ -284,16 +309,16 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
           <option value="name">Sort: A–Z</option>
           <option value="wait">Sort: Longest wait</option>
           <option value="status">Sort: Closed first</option>
+          <option value="trains">Sort: Busiest line</option>
         </select>
       </div>
 
       <div class="board-list" id="heroBoardList">
         <!-- Rows injected by JS -->
-        <div class="empty-state"><b>Loading Board...</b></div>
       </div>
 
       <div class="board-footer">
-        <span>●</span> Simulation Mode · Loaded <span id="record-count">0</span> rows from Kaggle
+        <span>●</span> Simulation Mode · Runs offline
       </div>
     </div>
 
@@ -497,429 +522,591 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-  // ==========================================
-  // 1. KAGGLE DATASET & SIMULATED BOARD LOGIC
-  // ==========================================
-  class Train {
-    constructor(record) {
-      this.speed = parseFloat(record.speed_kmh) || 50;
-      this.distance = parseFloat(record.distance_km) || 2;
-      this.delay = parseFloat(record.delay_min) || 0;
-      this.weather = record.weather || 'Clear';
-      this.actualClosingTime = parseFloat(record.actual_closing_time) || 15;
-      
-      let rawEta = this.speed > 0 ? (this.distance / this.speed) * 3600 : 60;
-      this.eta = rawEta > 180 ? Math.floor(Math.random() * 80) + 20 : Math.floor(rawEta);
-    }
-  }
+const API_BASE = (location.protocol === 'file:') ? 'http://localhost:8080' : '';
 
-  class RailwayGate {
-    constructor(id, name, location) {
-      this.id = id;
-      this.name = name;
-      this.location = location;
-      this.state = 'OPEN'; 
-      this.train = null;
-      this.eta = 0;
-      this.closedTimeRemaining = 0;
-    }
-  }
+let CROSSINGS = [];
+let CITIES = [];
 
-  const crossings = [
-    new RailwayGate(20, "20 No. Phatak", "Patiala · Northern Railway"),
-    new RailwayGate(21, "21 No. Phatak", "Patiala · Northern Railway"),
-    new RailwayGate(23, "23 No. Phatak", "Patiala · Northern Railway"),
-    new RailwayGate(24, "24 No. Phatak", "Patiala · Northern Railway"),
-    new RailwayGate(9, "Amritsar-Pathankot LC C-9", "Amritsar · Northern Railway"),
-    new RailwayGate(87, "Bathinda-Delhi LC B/87", "Bathinda · Northern Railway"),
-    new RailwayGate(1, "Canal Level Crossing", "Patiala · Northern Railway"),
-    new RailwayGate(16, "Crossing No. 16", "Patiala · Northern Railway"),
-    new RailwayGate(19, "Crossing No. 19", "Patiala · Northern Railway"),
-    new RailwayGate(164, "Doraha LC 164A", "Doraha · Northern Railway"),
-    new RailwayGate(124, "Jalandhar-Amritsar LC C-124", "Jalandhar · Northern Railway"),
-    new RailwayGate(43, "Ludhiana-Jalandhar LC C-43", "Ludhiana · Northern Railway"),
-    new RailwayGate(2, "Patiala-Rajpura Road Gate", "Patiala · Northern Railway"),
-    new RailwayGate(3, "Patiala-Samana Road Crossing", "Patiala · Northern Railway"),
-    new RailwayGate(4, "Rajpura Junction Gate", "Rajpura · Northern Railway"),
-    new RailwayGate(5, "Sangrur Road Crossing", "Patiala · Northern Railway"),
-    new RailwayGate(6, "Sirhind-Barara LC 113/CE", "Sirhind · Northern Railway")
-  ];
+/* PATIALA LOCAL ROUTING DATA - ACCURATE GEOGRAPHY */
+const PATIALA_LOCATIONS = [
+  "Model Town", "Thapar University", "Baradari Gardens", "Leela Bhawan", 
+  "Passy Road", "Dukhniwaran Sahib", "Patiala Cantt", "Qila Mubarak", 
+  "Old Bus Stand", "New Bus Stand"
+];
 
-  let dataset = [];
-  let currentFilter = 'ALL';
-  let currentSearch = '';
-  let currentSort = 'name';
+const LOCAL_ROUTES = [
+  // --- SAME SIDE (North/East) -> 0 CROSSINGS ---
+  { from: "Model Town", to: "Thapar University", crossingIds: [], bypass: "Via Bhupindra Road", dist: 3.5, bypassDist: 4.2, time: 9, bypassTime: 12 },
+  { from: "Thapar University", to: "Model Town", crossingIds: [], bypass: "Via Bhupindra Road", dist: 3.5, bypassDist: 4.2, time: 9, bypassTime: 12 },
+  
+  { from: "Baradari Gardens", to: "Thapar University", crossingIds: [], bypass: "Via Leela Bhawan / Passy Road", dist: 3.6, bypassDist: 4.8, time: 10, bypassTime: 15 },
+  { from: "Thapar University", to: "Baradari Gardens", crossingIds: [], bypass: "Via Leela Bhawan / Passy Road", dist: 3.6, bypassDist: 4.8, time: 10, bypassTime: 15 },
+  
+  { from: "Passy Road", to: "Thapar University", crossingIds: [], bypass: "Via Dukhniwaran Road", dist: 2.8, bypassDist: 4.2, time: 8, bypassTime: 13 },
+  { from: "Thapar University", to: "Passy Road", crossingIds: [], bypass: "Via Dukhniwaran Road", dist: 2.8, bypassDist: 4.2, time: 8, bypassTime: 13 },
+  
+  { from: "Old Bus Stand", to: "Thapar University", crossingIds: [], bypass: "Via Leela Bhawan / Mall Road", dist: 4.2, bypassDist: 5.8, time: 13, bypassTime: 19 },
+  { from: "Thapar University", to: "Old Bus Stand", crossingIds: [], bypass: "Via Leela Bhawan / Mall Road", dist: 4.2, bypassDist: 5.8, time: 13, bypassTime: 19 },
+  
+  { from: "Model Town", to: "Baradari Gardens", crossingIds: [], bypass: "Via Leela Bhawan Chowk", dist: 2.2, bypassDist: 3.1, time: 6, bypassTime: 10 },
+  { from: "Baradari Gardens", to: "Model Town", crossingIds: [], bypass: "Via Leela Bhawan Chowk", dist: 2.2, bypassDist: 3.1, time: 6, bypassTime: 10 },
+  
+  { from: "Model Town", to: "Leela Bhawan", crossingIds: [], bypass: "Via Baradari", dist: 1.5, bypassDist: 2.2, time: 4, bypassTime: 7 },
+  { from: "Leela Bhawan", to: "Model Town", crossingIds: [], bypass: "Via Baradari", dist: 1.5, bypassDist: 2.2, time: 4, bypassTime: 7 },
+  
+  { from: "Thapar University", to: "Dukhniwaran Sahib", crossingIds: [], bypass: "Via Sirhind Road Bypass", dist: 3.2, bypassDist: 4.5, time: 9, bypassTime: 13 },
+  { from: "Dukhniwaran Sahib", to: "Thapar University", crossingIds: [], bypass: "Via Sirhind Road Bypass", dist: 3.2, bypassDist: 4.5, time: 9, bypassTime: 13 },
+  
+  { from: "Qila Mubarak", to: "Old Bus Stand", crossingIds: [], bypass: "Via Leela Bhawan", dist: 1.8, bypassDist: 2.5, time: 5, bypassTime: 8 },
+  { from: "Old Bus Stand", to: "Qila Mubarak", crossingIds: [], bypass: "Via Leela Bhawan", dist: 1.8, bypassDist: 2.5, time: 5, bypassTime: 8 },
 
-  const listEl = document.getElementById('heroBoardList');
-  const statsEl = document.getElementById('heroStats');
-  const clockEl = document.getElementById('boardClock');
+  // --- CROSSING THE TRACKS (North to South/West) ---
+  { from: "Patiala Cantt", to: "Thapar University", crossingIds: ["PB-PTA-024"], bypass: "Via Sangrur Bypass", dist: 4.5, bypassDist: 5.8, time: 12, bypassTime: 16 },
+  { from: "Thapar University", to: "Patiala Cantt", crossingIds: ["PB-PTA-024"], bypass: "Via Sangrur Bypass", dist: 4.5, bypassDist: 5.8, time: 12, bypassTime: 16 },
+  
+  { from: "New Bus Stand", to: "Thapar University", crossingIds: ["PB-PTA-SANGRUR"], bypass: "Via Ring Road Bypass", dist: 5.5, bypassDist: 7.0, time: 15, bypassTime: 20 },
+  { from: "Thapar University", to: "New Bus Stand", crossingIds: ["PB-PTA-SANGRUR"], bypass: "Via Ring Road Bypass", dist: 5.5, bypassDist: 7.0, time: 15, bypassTime: 20 },
+  
+  { from: "Patiala Cantt", to: "Dukhniwaran Sahib", crossingIds: ["PB-PTA-023"], bypass: "Via Model Town Flyover", dist: 2.8, bypassDist: 3.5, time: 7, bypassTime: 10 },
+  { from: "Dukhniwaran Sahib", to: "Patiala Cantt", crossingIds: ["PB-PTA-023"], bypass: "Via Model Town Flyover", dist: 2.8, bypassDist: 3.5, time: 7, bypassTime: 10 },
+  
+  { from: "Leela Bhawan", to: "Patiala Cantt", crossingIds: ["PB-PTA-024"], bypass: "Via 22 No. Phatak Bypass", dist: 3.2, bypassDist: 4.8, time: 8, bypassTime: 12 },
+  { from: "Patiala Cantt", to: "Leela Bhawan", crossingIds: ["PB-PTA-024"], bypass: "Via 22 No. Phatak Bypass", dist: 3.2, bypassDist: 4.8, time: 8, bypassTime: 12 },
+  
+  { from: "Qila Mubarak", to: "New Bus Stand", crossingIds: ["PB-PTA-019"], bypass: "Via Mall Road", dist: 2.5, bypassDist: 3.5, time: 7, bypassTime: 11 },
+  { from: "New Bus Stand", to: "Qila Mubarak", crossingIds: ["PB-PTA-019"], bypass: "Via Mall Road", dist: 2.5, bypassDist: 3.5, time: 7, bypassTime: 11 }
+];
 
-  setInterval(() => {
-    if (clockEl) clockEl.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
-  }, 1000);
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const pick = a => a[Math.floor(Math.random() * a.length)];
 
-  Papa.parse("railway_data.csv", {
-    download: true, header: true, skipEmptyLines: true,
-    complete: (res) => {
-      dataset = res.data;
-      if (!dataset || dataset.length === 0) {
-        listEl.innerHTML = "<div class='empty-state'><b>CSV is empty.</b></div>";
-        return;
-      }
-      document.getElementById('record-count').textContent = dataset.length;
-      crossings.forEach(c => assignNewTrain(c));
-      setInterval(tick, 1000);
-      updateBoardUI(); 
-    },
-    error: (err) => {
-      console.error("Error loading Kaggle CSV", err);
-      listEl.innerHTML = "<div class='empty-state'><b>Error loading CSV.</b> Ensure railway_data.csv is in the web folder.</div>";
-    }
-  });
+function fmtTime(s){ s = Math.max(0, Math.round(s)); const m = Math.floor(s/60), x = s%60; return m > 0 ? `${m}m ${String(x).padStart(2,'0')}s` : `${x}s`; }
+function fmtClock(d){ return d.toLocaleTimeString('en-IN', { hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit' }); }
+function statusKey(s){ return s === 'OPEN' ? 'open' : s === 'CLOSING' ? 'closing' : 'closed'; }
+function statusLabel(s){ return s === 'OPEN' ? 'Open' : s === 'CLOSING' ? 'Closing soon' : 'Closed'; }
+function statusColors(s){ return s === 'OPEN' ? { bar:'var(--green)', text:'var(--green-ink)' } : s === 'CLOSING' ? { bar:'var(--amber)', text:'var(--amber-ink)' } : { bar:'var(--red)', text:'var(--red-ink)' }; }
+function hashString(str){ let h = 2166136261; for (let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function mulberry32(seed){ return function(){ seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function haversine(a, b){ const R = 6371, dLat = (b.lat - a.lat) * Math.PI / 180, dLng = (b.lng - a.lng) * Math.PI / 180; const l1 = a.lat * Math.PI / 180, l2 = b.lat * Math.PI / 180; const h = Math.sin(dLat/2)**2 + Math.cos(l1) * Math.cos(l2) * Math.sin(dLng/2)**2; return 2 * R * Math.asin(Math.sqrt(h)); }
 
-  function assignNewTrain(crossing) {
-    const randomRecord = dataset[Math.floor(Math.random() * dataset.length)];
-    crossing.train = new Train(randomRecord);
-    crossing.eta = crossing.train.eta;
-    crossing.state = crossing.eta < 15 ? 'CLOSING' : 'OPEN';
-  }
+const toastWrap = $('#toastWrap');
+function showToast(msg, ico = 'ℹ️', dur = 3600){
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `<span class="t-ico">${ico}</span><span>${msg}</span>`;
+  toastWrap.appendChild(el);
+  setTimeout(() => el.remove(), dur);
+}
 
-  function tick() {
-    crossings.forEach(c => {
-      if (c.state === 'CLOSED') {
-        c.closedTimeRemaining--;
-        if (c.closedTimeRemaining <= 0) assignNewTrain(c);
-      } else {
-        c.eta -= 1;
-        if (c.eta < 15 && c.state === 'OPEN') c.state = 'CLOSING';
-        if (c.eta <= 0) {
-          c.state = 'CLOSED';
-          c.closedTimeRemaining = Math.min(Math.round(c.train.actualClosingTime), 25); 
-        }
+const FALLBACK_CROSSINGS = [
+  { id:'PB-PTA-020', name:'20 No. Phatak (Crossing No. 20)', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Baradari Garden area', avgWaitMinutes:9, dailyTrains:48, alternateRoute:'Baradari Garden Flyover / Mall Road Bypass', status:'OPEN', secondsToNext:58 },
+  { id:'PB-PTA-023', name:'23 No. Phatak (Crossing No. 23)', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Model Town, near Patiala Cantt Station', avgWaitMinutes:9, dailyTrains:50, alternateRoute:'Model Town Flyover', status:'CLOSING', secondsToNext:19 },
+  { id:'PB-PTA-024', name:'24 No. Phatak (Crossing No. 24)', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Near Patiala Cantt Station, Model Town', avgWaitMinutes:11, dailyTrains:54, alternateRoute:'Patiala Cantt Road / Sangrur Bypass', status:'OPEN', secondsToNext:33 },
+  { id:'PB-PTA-016', name:'Crossing No. 16', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Patiala city', avgWaitMinutes:8, dailyTrains:44, alternateRoute:'City Bypass Road', status:'OPEN', secondsToNext:64 },
+  { id:'PB-PTA-019', name:'Crossing No. 19', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Patiala city', avgWaitMinutes:8, dailyTrains:44, alternateRoute:'City Bypass Road', status:'CLOSED', secondsToNext:124 },
+  { id:'PB-PTA-SAMANA', name:'Patiala-Samana Road Crossing', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Patiala-Samana Branch', landmark:'Patiala-Samana Road', avgWaitMinutes:7, dailyTrains:22, alternateRoute:'Sangrur Road Bypass', status:'OPEN', secondsToNext:47 },
+  { id:'PB-PTA-RAJPURA', name:'Patiala-Rajpura Road Gate', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Main Line', landmark:'Patiala-Rajpura Road', avgWaitMinutes:11, dailyTrains:52, alternateRoute:'Rajpura Bypass via NH-44', status:'CLOSING', secondsToNext:23 },
+  { id:'PB-PTA-SANGRUR', name:'Sangrur Road Crossing', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Patiala-Sangrur Branch', landmark:'Sangrur Road, Patiala', avgWaitMinutes:6, dailyTrains:18, alternateRoute:'Sangrur Bypass via Bhawanigarh', status:'OPEN', secondsToNext:72 },
+  { id:'PB-PTA-CANAL', name:'Canal Level Crossing', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Ranbirpura / Dhamo Majra', avgWaitMinutes:7, dailyTrains:30, alternateRoute:'Canal Road Bypass', status:'OPEN', secondsToNext:55 },
+  { id:'PB-RAJ-001', name:'Rajpura Junction Gate', city:'Rajpura', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Delhi-Amritsar Main Line', landmark:'Rajpura Junction', avgWaitMinutes:11, dailyTrains:58, alternateRoute:'Rajpura Bypass / NH-44', status:'CLOSED', secondsToNext:98 },
+  { id:'PB-SIR-001', name:'Sirhind-Barara LC 113/CE', city:'Sirhind', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Barara-Tandwal Section', landmark:'Sirhind', avgWaitMinutes:8, dailyTrains:32, alternateRoute:'NH-44 Bypass via Rajpura', status:'OPEN', secondsToNext:61 },
+  { id:'PB-LDH-001', name:'Ludhiana-Jalandhar LC C-43', city:'Ludhiana', state:'Punjab', zone:'Northern Railway', division:'Firozpur', line:'Jalandhar-Hoshiarpur Line', landmark:'Ludhiana city', avgWaitMinutes:8, dailyTrains:40, alternateRoute:'Ferozepur Road Flyover', status:'OPEN', secondsToNext:38 },
+  { id:'PB-JAL-001', name:'Jalandhar-Amritsar LC C-124', city:'Jalandhar', state:'Punjab', zone:'Northern Railway', division:'Firozpur', line:'Ludhiana-Amritsar Line', landmark:'Jalandhar city', avgWaitMinutes:12, dailyTrains:44, alternateRoute:'Kapurthala Road Bypass', status:'CLOSED', secondsToNext:76 },
+  { id:'PB-ASR-001', name:'Amritsar-Pathankot LC C-9', city:'Amritsar', state:'Punjab', zone:'Northern Railway', division:'Firozpur', line:'Amritsar-Pathankot Line', landmark:'Amritsar city', avgWaitMinutes:10, dailyTrains:36, alternateRoute:'GT Road Bypass / NH-354', status:'OPEN', secondsToNext:69 },
+  { id:'PB-BTI-001', name:'Bathinda-Delhi LC B/87', city:'Bathinda', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Bathinda-Delhi Main Line', landmark:'Bathinda city', avgWaitMinutes:10, dailyTrains:50, alternateRoute:'Barnala Bypass', status:'CLOSING', secondsToNext:28 },
+  { id:'PB-DOR-001', name:'Doraha LC 164A', city:'Doraha', state:'Punjab', zone:'Northern Railway', division:'Firozpur', line:'Ambala-Ludhiana Section', landmark:'Doraha', avgWaitMinutes:13, dailyTrains:56, alternateRoute:'Doraha ROB / NH-44', status:'CLOSED', secondsToNext:142 }
+];
+
+const FALLBACK_CITIES = [
+  { name:'Patiala', lat:30.3398, lng:76.3869 }, { name:'Rajpura', lat:30.4833, lng:76.5945 },
+  { name:'Sirhind', lat:30.6432, lng:76.3821 }, { name:'Sangrur', lat:30.2458, lng:75.8421 },
+  { name:'Ludhiana', lat:30.9010, lng:75.8573 }, { name:'Jalandhar', lat:31.3260, lng:75.5762 },
+  { name:'Amritsar', lat:31.6340, lng:74.8723 }, { name:'Bathinda', lat:30.2110, lng:74.9455 },
+  { name:'Doraha', lat:30.7998, lng:76.0201 }, { name:'Chandigarh', lat:30.7333, lng:76.7794 },
+  { name:'Mohali', lat:30.7046, lng:76.7179 }, { name:'Moga', lat:30.8158, lng:75.1717 },
+  { name:'Firozpur', lat:30.9331, lng:74.6225 }, { name:'Pathankot', lat:32.2643, lng:75.6421 },
+  { name:'Hoshiarpur', lat:31.5143, lng:75.9115 }, { name:'Ambala', lat:30.3782, lng:76.7767 }
+];
+
+const TRANSITIONS = { OPEN:{next:'CLOSING',min:35,max:95}, CLOSING:{next:'CLOSED',min:16,max:34}, CLOSED:{next:'OPEN',min:70,max:170} };
+
+const boardList = $('#heroBoardList');
+let activeFilter = 'ALL', activeSort = 'name', searchTerm = '';
+
+// --- KAGGLE DATASET INTEGRATION ---
+let KAGGLE_DATA = [];
+
+function getKaggleRow() {
+  if (KAGGLE_DATA.length === 0) return { weather: 'Clear', actualClosingTime: 15 };
+  const rec = KAGGLE_DATA[Math.floor(Math.random() * KAGGLE_DATA.length)];
+  return { 
+    weather: rec.weather || 'Clear', 
+    actualClosingTime: parseFloat(rec.actual_closing_time) || 15 
+  };
+}
+
+function loadKaggleData() {
+  return new Promise((resolve) => {
+    Papa.parse("railway_data.csv", {
+      download: true, header: true, skipEmptyLines: true,
+      complete: (res) => {
+        KAGGLE_DATA = res.data;
+        resolve();
+      },
+      error: (err) => {
+        console.warn("Kaggle CSV failed to load, falling back to default simulation.", err);
+        resolve();
       }
     });
-    updateBoardUI();
+  });
+}
+
+function renderBoard(){
+  const order = { CLOSED:0, CLOSING:1, OPEN:2 };
+  
+  let filtered = CROSSINGS.filter(c => {
+    const ms = activeFilter === 'ALL' || c.status === activeFilter;
+    const hay = (c.name + ' ' + c.city + ' ' + c.state + ' ' + c.line + ' ' + c.id + ' ' + c.landmark).toLowerCase();
+    const mt = searchTerm === '' || hay.includes(searchTerm);
+    return ms && mt;
+  });
+
+  filtered.sort((a, b) => {
+    if (activeSort === 'name') return a.name.localeCompare(b.name);
+    if (activeSort === 'trains') return b.dailyTrains - a.dailyTrains;
+    if (activeSort === 'wait'){ if (order[a.status] !== order[b.status]) return order[a.status] - order[b.status]; return b.avgWaitMinutes - a.avgWaitMinutes; }
+    if (activeSort === 'status'){ return order[a.status] - order[b.status] || a.name.localeCompare(b.name); }
+    return 0;
+  });
+
+  if (filtered.length === 0) {
+    boardList.innerHTML = `<div class="empty-state"><b>No crossings match</b>Try a different filter or search.</div>`;
+    return;
   }
 
-  function updateBoardUI() {
-    if (statsEl) {
-      let openCount = crossings.filter(c => c.state === 'OPEN' || c.state === 'CLOSING').length;
-      let closedCount = crossings.filter(c => c.state === 'CLOSED').length;
-      let totalWait = crossings.filter(c => c.state === 'CLOSED').reduce((sum, c) => sum + c.closedTimeRemaining, 0);
-      let avgWait = closedCount > 0 ? Math.round(totalWait / closedCount) : 0;
-
-      statsEl.innerHTML = `
-        <div class="stat"><b>${crossings.length}</b><span>Crossings</span></div>
-        <div class="stat g"><b>${openCount}</b><span>Open now</span></div>
-        <div class="stat r"><b>${closedCount}</b><span>Closed now</span></div>
-        <div class="stat a"><b>${avgWait}s</b><span>Avg wait</span></div>
-      `;
-    }
-
-    let displayCrossings = crossings.filter(c => {
-      let matchesFilter = currentFilter === 'ALL' || c.state === currentFilter;
-      let matchesSearch = c.name.toLowerCase().includes(currentSearch.toLowerCase()) || c.location.toLowerCase().includes(currentSearch.toLowerCase());
-      return matchesFilter && matchesSearch;
-    });
-
-    displayCrossings.sort((a, b) => {
-      if (currentSort === 'name') return a.name.localeCompare(b.name);
-      if (currentSort === 'wait') return b.closedTimeRemaining - a.closedTimeRemaining;
-      if (currentSort === 'status') {
-        let s = { 'CLOSED': 3, 'CLOSING': 2, 'OPEN': 1 };
-        return s[b.state] - s[a.state];
-      }
-      return 0;
-    });
-
-    if (listEl) {
-      if (displayCrossings.length === 0) {
-        listEl.innerHTML = "<div class='empty-state'><b>No crossings found</b>Try a different search or filter.</div>";
-      } else {
-        listEl.innerHTML = displayCrossings.map(c => {
-          let statusText = c.state === 'OPEN' ? `closes ~${c.eta}s` : c.state === 'CLOSING' ? `closing ${c.eta}s` : `closed ${c.closedTimeRemaining}s`;
-          let stateClass = c.state.toLowerCase();
-          let pillClass = stateClass === 'open' ? 'pill-open' : stateClass === 'closing' ? 'pill-closing' : 'pill-closed';
-          let timeClass = stateClass === 'open' ? 't-open' : stateClass === 'closing' ? 't-closing' : 't-closed';
-
-          return `
-            <div class="board-row">
-              <span class="br-pill ${pillClass}"></span>
-              <div class="br-info">
-                <div class="br-name">${c.name}</div>
-                <div class="br-city">${c.location}</div>
-              </div>
-              <div class="br-time ${timeClass}">${statusText}</div>
-            </div>
-          `;
-        }).join('');
-      }
-    }
-  }
-
-  document.getElementById('searchInput').addEventListener('input', (e) => {
-    currentSearch = e.target.value;
-    updateBoardUI();
-  });
-
-  document.querySelectorAll('.chip-dark').forEach(chip => {
-    chip.addEventListener('click', (e) => {
-      document.querySelectorAll('.chip-dark').forEach(c => c.classList.remove('active'));
-      e.target.classList.add('active');
-      currentFilter = e.target.getAttribute('data-filter');
-      updateBoardUI();
-    });
-  });
-
-  document.getElementById('sortSelect').addEventListener('change', (e) => {
-    currentSort = e.target.value;
-    updateBoardUI();
-  });
-
-
-  // ==========================================
-  // 2. LIVE TRAINS SECTION LOGIC
-  // ==========================================
-  const liveTrainsBox = document.getElementById('liveTrainsBox');
-  const loadLiveBtn = document.getElementById('loadLiveBtn');
-  const liveStatus = document.getElementById('liveStatus');
-
-  loadLiveBtn.addEventListener('click', () => {
-    liveStatus.textContent = "Fetching...";
-    setTimeout(() => {
-      const mockTrains = [
-        { name: "Shane Punjab Express", type: "Express", eta: "12 mins", delay: "On Time", color: "var(--green-ink)" },
-        { name: "Patiala - Delhi Jn", type: "Superfast", eta: "34 mins", delay: "Delayed 5m", color: "var(--amber-ink)" },
-        { name: "Amritsar - Mumbai CSMT", type: "Express", eta: "1 hr 5m", delay: "On Time", color: "var(--green-ink)" }
-      ];
-
-      liveTrainsBox.innerHTML = mockTrains.map(t => `
-        <div class="crossing-card" data-status="OPEN" style="border-left-color: var(--green);">
-          <div class="cc-top">
-            <div>
-              <div class="cc-name">${t.name}</div>
-              <div class="cc-loc">${t.type}</div>
-            </div>
-            <div class="badge open" style="background: var(--green-bg); color: var(--green-ink);">ARRIVING</div>
-          </div>
-          <div class="cc-timer">
-            <span class="cc-timer-label">Arriving in</span>
-            <div class="cc-timer-val g">${t.eta}</div>
-          </div>
-          <div class="cc-meta">
-            <div><span>Status</span><strong style="color:${t.color}">${t.delay}</strong></div>
-            <div><span>Platform</span><strong>3</strong></div>
-            <div><span>Source</span><strong>PTA</strong></div>
-          </div>
+  boardList.innerHTML = filtered.map(c => {
+    const key = statusKey(c.status);
+    let t = c.status === 'OPEN' ? `closes ~${fmtTime(c.secondsToNext || 0)}` : c.status === 'CLOSING' ? `closing ${fmtTime(c.secondsToNext || 0)}` : `reopens ${fmtTime(c.secondsToNext || 0)}`;
+    return `
+      <div class="board-row">
+        <span class="br-pill pill-${key}"></span>
+        <div class="br-info">
+          <div class="br-name">${c.name}</div>
+          <div class="br-city">${c.city} · ${c.zone} ${c.weather ? '| ' + c.weather : ''}</div>
         </div>
-      `).join('');
-      liveStatus.textContent = "Data loaded successfully.";
-    }, 800);
+        <div class="br-time t-${key}">${t}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderHeroStats(){
+  const total = CROSSINGS.length;
+  const open = CROSSINGS.filter(c => c.status === 'OPEN').length;
+  const closed = CROSSINGS.filter(c => c.status === 'CLOSED').length;
+  const avg = total ? Math.round(CROSSINGS.reduce((s, c) => s + c.avgWaitMinutes, 0) / total) : 0;
+  $('#heroStats').innerHTML = `
+    <div class="stat"><b>${total}</b><span>Crossings</span></div>
+    <div class="stat g"><b>${open}</b><span>Open now</span></div>
+    <div class="stat r"><b>${closed}</b><span>Closed now</span></div>
+    <div class="stat a"><b>${avg}m</b><span>Avg wait</span></div>`;
+}
+
+$('#searchInput').addEventListener('input', e => { searchTerm = e.target.value.trim().toLowerCase(); renderBoard(); });
+$$('#statusChips .chip-dark').forEach(ch => ch.addEventListener('click', () => {
+  $$('#statusChips .chip-dark').forEach(c => c.classList.remove('active'));
+  ch.classList.add('active');
+  activeFilter = ch.dataset.filter;
+  renderBoard();
+}));
+$('#sortSelect').addEventListener('change', e => { activeSort = e.target.value; renderBoard(); });
+
+
+/* ROUTE PLANNER & MODAL */
+const overlay = $('#modalOverlay');
+let watched = new Set();
+
+function openModal(id){
+  const c = CROSSINGS.find(x => x.id === id); if (!c) return;
+  const key = statusKey(c.status);
+  const colors = statusColors(c.status);
+  let sv = c.status === 'OPEN' ? `Next closure in ~${fmtTime(c.secondsToNext || 0)}` : c.status === 'CLOSING' ? `Closing in ${fmtTime(c.secondsToNext || 0)}` : `Reopens in ${fmtTime(c.secondsToNext || 0)}`;
+  $('#modalTitle').textContent = c.name;
+  $('#modalSub').textContent = `${c.id} · ${c.landmark}, ${c.city} · ${c.zone}`;
+  $('#modalBody').innerHTML = `
+    <div class="modal-status ${key}">
+      <div><div class="ms-label">Current status</div><div class="ms-value" style="color:${colors.text}">${statusLabel(c.status)}</div></div>
+      <div class="ms-train">${c.train ? '🚆 ' + c.train : '✅ No train approaching'}</div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-item"><span>Countdown</span><strong>${sv}</strong></div>
+      <div class="detail-item"><span>Railway line</span><strong>${c.line}</strong></div>
+      <div class="detail-item"><span>Average wait</span><strong>${c.avgWaitMinutes} minutes</strong></div>
+      <div class="detail-item"><span>Trains per day</span><strong>${c.dailyTrains}</strong></div>
+      <div class="detail-item"><span>Division</span><strong>${c.division}</strong></div>
+      <div class="detail-item"><span>Landmark</span><strong>${c.landmark}</strong></div>
+    </div>
+    <div class="alt-box"><span>Recommended alternate route</span><strong>${c.alternateRoute}</strong></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="modalNotify">🔔 Notify me when open</button>
+    </div>`;
+  $('#modalNotify').addEventListener('click', () => {
+    if (watched.has(c.id)){ watched.delete(c.id); showToast(`Alerts off for ${c.name}.`, '🔕'); }
+    else { watched.add(c.id); showToast(`We'll alert you when ${c.name} reopens.`, '🔔'); }
   });
+  overlay.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(){ overlay.classList.remove('show'); document.body.style.overflow = ''; }
+$('#modalClose').addEventListener('click', closeModal);
+overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 
-  // ==========================================
-  // 3. ROUTE PLANNER LOGIC (DETAILED PATIALA LOCAL)
-  // ==========================================
-  const intercityCities = ["Patiala", "Rajpura", "Ludhiana", "Jalandhar", "Amritsar", "Bathinda", "Chandigarh"];
+const modeSelect = $('#modeSelect');
+const fromSelect = $('#fromSelect'), toSelect = $('#toSelect');
+
+function populateSelects() {
+  if (modeSelect.value === 'local') {
+    const opts = PATIALA_LOCATIONS.map(c => `<option value="${c}">${c}</option>`).join('');
+    fromSelect.innerHTML = opts; toSelect.innerHTML = opts;
+    fromSelect.value = 'Model Town'; toSelect.value = 'Thapar University';
+    $('#timeField').style.display = 'none';
+  } else {
+    const opts = CITIES.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+    fromSelect.innerHTML = opts; toSelect.innerHTML = opts;
+    fromSelect.value = 'Patiala'; toSelect.value = 'Chandigarh';
+    $('#timeField').style.display = 'block';
+  }
+}
+
+modeSelect.addEventListener('change', populateSelects);
+
+function crossingDelay(c){
+  if (c.status === 'OPEN') return c.avgWaitMinutes * 0.35;
+  if (c.status === 'CLOSING') return c.avgWaitMinutes * 0.8 + 1.5;
+  return (c.secondsToNext || 60) / 60 + c.avgWaitMinutes * 0.45;
+}
+function crossingForCity(city){ return CROSSINGS.find(c => c.city === city) || null; }
+
+function renderRoutes(routes, fromName, toName, departTime, isLocal){
+  const c = $('#resultsContainer');
+  if (!routes.length){ c.innerHTML = '<div class="empty-state"><b>No routes available</b>Choose two different locations.</div>'; return; }
+  const priority = $('#prioritySelect').value;
   
-  // Comprehensive list of important Patiala landmarks
-  const localLocations = [
-    "Thapar University (North)",
-    "Punjabi University (West)",
-    "Sheesh Mahal / Qila Mubarak (Old City)",
-    "Leela Bhawan (Central)",
-    "Baradari Gardens (Central)",
-    "Patiala Railway Station (South)",
-    "Patiala Old Bus Stand (City Center)",
-    "New Bus Stand (Rajpura Bypass)"
-  ];
+  const ranked = [...routes].sort((a, b) => {
+    if (priority === 'crossings' && a.crossings.length !== b.crossings.length) {
+      return a.crossings.length - b.crossings.length;
+    }
+    return a.totalMinutes - b.totalMinutes;
+  });
   
-  // Map locations to their real-world road networks
-  const localRouteHubs = {
-    "Thapar University (North)": { road: "Bhadson Road", area: "North" },
-    "Punjabi University (West)": { road: "Patiala-Rajpura Bypass", area: "West" },
-    "Sheesh Mahal / Qila Mubarak (Old City)": { road: "Mall Road / Old City", area: "Center" },
-    "Leela Bhawan (Central)": { road: "Leela Bhawan Chowk", area: "Center" },
-    "Baradari Gardens (Central)": { road: "Baradari Road", area: "Center" },
-    "Patiala Railway Station (South)": { road: "Station Road", area: "South" },
-    "Patiala Old Bus Stand (City Center)": { road: "Mall Road", area: "Center" },
-    "New Bus Stand (Rajpura Bypass)": { road: "Rajpura Road / NH 64 Bypass", area: "South Outskirts" }
+  const best = ranked[0].id;
+  $('#resultsTitle').textContent = `${fromName} → ${toName}`;
+  $('#resultsSub').textContent = isLocal ? `Local trip · ${ranked.length} options` : `Departing ${departTime} · ${ranked.length} options`;
+  
+  c.innerHTML = ranked.map((r, i) => {
+    const isBest = r.id === best;
+    const th = Math.floor(r.totalMinutes / 60), tm = Math.round(r.totalMinutes % 60), dm = Math.round(r.delay);
+    
+    const timeString = th > 0 ? `${th}h ${tm}m` : `${tm}m`;
+    const totalTimeString = th > 0 ? `${th}h ${tm}m total` : `${tm}m total`;
+
+    const tl = [];
+    tl.push(`<div class="tl-item"><span class="tl-node start"></span><div class="tl-body"><div class="tl-title">Start · ${fromName}</div></div></div>`);
+    
+    if (r.crossings.length === 0) {
+      tl.push(`<div class="tl-item"><span class="tl-node open"></span><div class="tl-body"><div class="tl-title">No level crossings</div><span class="tl-warn open">✅ Clear run</span></div></div>`);
+    } else {
+      r.crossings.forEach(({ crossing, delay }) => {
+        const k = statusKey(crossing.status);
+        const wt = crossing.status === 'OPEN' ? `Likely clear · ~${Math.round(delay)} min risk` : crossing.status === 'CLOSING' ? `Closing soon · ~${Math.round(delay)} min wait` : `Gate down · ~${Math.round(delay)} min wait`;
+        tl.push(`<div class="tl-item"><span class="tl-node ${k}"></span><div class="tl-body"><div class="tl-title">${crossing.name}</div><div class="tl-sub">${crossing.landmark}</div><span class="tl-warn ${k}">${wt}</span></div></div>`);
+      });
+    }
+    
+    tl.push(`<div class="tl-item"><span class="tl-node end"></span><div class="tl-body"><div class="tl-title">Arrive · ${toName}</div><div class="tl-sub">Approx. ${totalTimeString}</div></div></div>`);
+    
+    const note = r.crossings.length === 0 ? 'Route bypasses all monitored crossings.' : r.riskCount === 0 ? 'All crossings currently open. Low risk.' : `${r.riskCount} crossing${r.riskCount > 1 ? 's' : ''} currently not open. Consider bypass.`;
+    
+    return `<article class="route-card ${isBest ? 'best' : ''}">
+      <div class="rc-head">
+        <div><div class="rc-title">${r.name}<span class="rc-tag">${r.tag}</span></div></div>
+        <div class="rc-metrics">
+          <div class="rc-metric"><b>${Math.round(r.distanceKm)}</b><span>km</span></div>
+          <div class="rc-metric"><b>${timeString}</b><span>total time</span></div>
+          <div class="rc-metric delay"><b>+${dm}m</b><span>crossing delay</span></div>
+        </div>
+      </div>
+      <div class="timeline">${tl.join('')}</div>
+      <div class="rc-foot"><span class="rc-note">${note}</span></div>
+    </article>`;
+  }).join('');
+}
+
+// INTERCITY LOGIC (With Accurate Real-World Distances)
+function planIntercityRoutes(fromName, toName){
+  const INTERCITY_DATA = {
+    "Patiala-Chandigarh": { dist: 70, time: 90 },
+    "Patiala-Ludhiana": { dist: 120, time: 120 },
+    "Patiala-Amritsar": { dist: 235, time: 240 },
+    "Patiala-Jalandhar": { dist: 155, time: 150 },
+    "Patiala-Bathinda": { dist: 150, time: 150 },
+    "Patiala-Ambala": { dist: 65, time: 75 },
+    "Patiala-Delhi": { dist: 250, time: 260 },
+    "Chandigarh-Ludhiana": { dist: 110, time: 120 },
+    "Chandigarh-Amritsar": { dist: 230, time: 240 },
+    "Ludhiana-Amritsar": { dist: 140, time: 140 }
   };
 
-  const modeSelect = document.getElementById('modeSelect');
-  const fromSelect = document.getElementById('fromSelect');
-  const toSelect = document.getElementById('toSelect');
-  const swapBtn = document.getElementById('swapBtn');
-  const plannerForm = document.getElementById('plannerForm');
-  const resultsContainer = document.getElementById('resultsContainer');
-  const prioritySelect = document.getElementById('prioritySelect');
+  const pairKey = `${fromName}-${toName}`;
+  const reverseKey = `${toName}-${fromName}`;
+  const routeInfo = INTERCITY_DATA[pairKey] || INTERCITY_DATA[reverseKey] || { dist: 120, time: 120 };
 
-  function populateDropdowns(mode) {
-    const list = mode === 'local' ? localLocations : intercityCities;
-    fromSelect.innerHTML = '';
-    toSelect.innerHTML = '';
-    list.forEach(loc => {
-      fromSelect.innerHTML += `<option value="${loc}">${loc}</option>`;
-      toSelect.innerHTML += `<option value="${loc}">${loc}</option>`;
-    });
-    if (list.length > 1) toSelect.selectedIndex = 1;
+  const originX = crossingForCity(fromName), destX = crossingForCity(toName);
+  const middles = CITIES.filter(c => c.name !== fromName && c.name !== toName);
+  const midCity = middles[0];
+  const midX = crossingForCity(midCity.name);
+
+  const templates = [
+    { name:'Main Highway Corridor', tag:'Most direct', crossings:[originX].filter(Boolean), distMul:1.00, timeMul:1.00 },
+    { name:'Ring Road Bypass', tag:'Zero crossings', crossings:[], distMul:1.15, timeMul:1.15 },
+    { name:'City Shortcut', tag:'Shortest distance', crossings:[originX, midX, destX].filter(Boolean), distMul:0.95, timeMul:1.05 }
+  ];
+
+  return templates.map(t => {
+    const seen = new Set();
+    const cs = t.crossings.filter(c => { if (!c || seen.has(c.id)) return false; seen.add(c.id); return true; });
+    const dist = routeInfo.dist * t.distMul;
+    const baseTime = routeInfo.time * t.timeMul;
+    let delay = 0;
+    const det = cs.map(c => { const d = crossingDelay(c); delay += d; return { crossing:c, delay:d }; });
+    return { id:t.name, name:t.name, tag:t.tag, distanceKm:dist, baseTime, delay, totalMinutes: baseTime + delay, crossings:det, riskCount: cs.filter(c => c.status !== 'OPEN').length };
+  });
+}
+
+// INTRA-CITY (LOCAL) LOGIC
+function planLocalRoutes(fromName, toName){
+  let routeData = LOCAL_ROUTES.find(r => r.from === fromName && r.to === toName);
+  
+  // Fallback if route is not predefined
+  if (!routeData) {
+    routeData = { from: fromName, to: toName, crossingIds: [], bypass: "Via City Bypass Road", dist: 3.5, bypassDist: 5.0, time: 9, bypassTime: 15 };
   }
 
-  populateDropdowns('intercity');
+  const validCrossings = routeData.crossingIds
+    .map(id => CROSSINGS.find(c => c.id === id))
+    .filter(Boolean);
 
-  modeSelect.addEventListener('change', (e) => {
-    populateDropdowns(e.target.value);
+  let cDelay = 0;
+  const det = validCrossings.map(crossing => {
+    const d = crossingDelay(crossing);
+    cDelay += d;
+    return { crossing, delay: d };
   });
 
-  swapBtn.addEventListener('click', () => {
-    let temp = fromSelect.value;
-    fromSelect.value = toSelect.value;
-    toSelect.value = temp;
-  });
+  const directTime = routeData.time + cDelay;
+  const bypassTime = routeData.bypassTime;
 
-  plannerForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const from = fromSelect.value;
-    const to = toSelect.value;
-    const mode = modeSelect.value;
-    const priority = prioritySelect.value;
+  return [
+    {
+      id: 'direct', name: 'Direct Route', tag: 'Shortest path',
+      distanceKm: routeData.dist, baseTime: routeData.time, delay: cDelay,
+      totalMinutes: directTime, crossings: det, riskCount: validCrossings.filter(c => c.status !== 'OPEN').length
+    },
+    {
+      id: 'bypass', name: routeData.bypass, tag: 'Bypass route',
+      distanceKm: routeData.bypassDist, baseTime: routeData.bypassTime, delay: 0,
+      totalMinutes: bypassTime, crossings: [], riskCount: 0
+    }
+  ];
+}
 
-    if (from === to) {
-      resultsContainer.innerHTML = "<div class='empty-state'><b>Invalid Route</b>Origin and destination cannot be the same.</div>";
+$('#swapBtn').addEventListener('click', () => { const a = fromSelect.value; fromSelect.value = toSelect.value; toSelect.value = a; });
+$('#plannerForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const f = fromSelect.value, t = toSelect.value;
+  if (f === t){ showToast('Origin and destination must be different.', '⚠️'); return; }
+  
+  if (modeSelect.value === 'local') {
+    renderRoutes(planLocalRoutes(f, t), f, t, 'Local', true);
+  } else {
+    renderRoutes(planIntercityRoutes(f, t), f, t, $('#departInput').value || '09:00', false);
+  }
+});
+$('#subscribeForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const em = $('#subscribeEmail').value.trim(); if (!em) return;
+  showToast(`Alerts will be sent to ${em}.`, '📬');
+  e.target.reset();
+});
+
+
+/* LIVE RAILRADAR API LOGIC */
+async function loadLiveTrains() {
+  const stn  = document.getElementById('liveStationSelect').value;
+  const hrs  = document.getElementById('liveHoursSelect').value;
+  const box  = document.getElementById('liveTrainsBox');
+  const stat = document.getElementById('liveStatus');
+
+  box.innerHTML = '<div class="empty-state"><b>Loading…</b>Fetching live data from RailRadar via C++ backend</div>';
+  stat.textContent = 'Fetching…';
+
+  try {
+    const url = `${API_BASE}/api/live-station?stn=${stn}&hrs=${hrs}`;
+    const r = await fetch(url, { headers: { 'accept': 'application/json' } });
+
+    stat.textContent = `HTTP ${r.status}`;
+
+    if (!r.ok) {
+      const errText = await r.text();
+      box.innerHTML = `<div class="empty-state"><b>Backend returned HTTP ${r.status}</b>${errText.slice(0,400)}<br><br>Check if RAILRADAR_API_KEY is set in Render Environment Variables.</div>`;
       return;
     }
 
-    let timeStr = "";
-    let delayStr = "";
-    let crossingName = "";
-    let crossingLoc = "";
-    let routeRoads = "";
-    let showCrossing = false;
-
-    if (mode === 'local') {
-        const hubFrom = localRouteHubs[from];
-        const hubTo = localRouteHubs[to];
-        
-        // Realistic local times (10 to 25 mins)
-        let baseMin = Math.floor(Math.random() * 15) + 10; 
-        if (hubFrom.area === "North" && hubTo.area === "South Outskirts") baseMin = 35; // Thapar to New Bus Stand
-        if (hubFrom.area === "West" && hubTo.area === "Center") baseMin = 25; // Punjabi Uni to Leela Bhawan
-        
-        timeStr = `${baseMin} mins`;
-
-        // Build road context
-        if (hubFrom.road === hubTo.road) {
-            routeRoads = `via ${hubFrom.road}`;
-        } else {
-            routeRoads = `via ${hubFrom.road} and ${hubTo.road}`;
-        }
-        
-        // Crossing logic: only show if crossing from North/Center to South
-        if ((hubFrom.area === "North" || hubFrom.area === "Center") && hubTo.area === "South" && priority === 'time') {
-            showCrossing = true;
-            crossingName = "22 No. Phatak";
-            crossingLoc = "Patiala · Northern Railway";
-            delayStr = "+3m";
-        } else {
-            delayStr = "0m";
-        }
-
-    } else {
-        // Accurate Intercity driving times based on real geography (Punjab only)
-        const routes = {
-            "Patiala-Rajpura": { time: 28, crossing: "Rajpura Level Crossing" },
-            "Patiala-Chandigarh": { time: 85, crossing: "Zirakpur Crossing" }, // ~1h 25m
-            "Patiala-Ludhiana": { time: 105, crossing: "Doraha LC 164A" }, // ~1h 45m
-            "Patiala-Jalandhar": { time: 135, crossing: "Phagwara Crossing" }, // ~2h 15m
-            "Patiala-Amritsar": { time: 230, crossing: "Jandiala Crossing" }, // ~3h 50m
-            "Patiala-Bathinda": { time: 165, crossing: "Rampura Phul Gate" } // ~2h 45m
-        };
-
-        let key = `${from}-${to}`;
-        if (!routes[key]) key = `${to}-${from}`;
-        const routeInfo = routes[key] || { time: 60, crossing: "" };
-        
-        if (routeInfo.time >= 60) {
-            let h = Math.floor(routeInfo.time / 60);
-            let m = routeInfo.time % 60;
-            timeStr = m > 0 ? `${h}h ${m}m` : `${h}h`;
-        } else {
-            timeStr = `${routeInfo.time}m`;
-        }
-
-        if (routeInfo.crossing && priority === 'time') {
-            showCrossing = true;
-            crossingName = routeInfo.crossing;
-            crossingLoc = "Punjab · Northern Railway";
-            delayStr = "+5m";
-        } else {
-            delayStr = "0m";
-        }
-
-        if (from === "Patiala" && to === "Rajpura") routeRoads = "via NH 64";
-        else if (from === "Patiala" && to === "Chandigarh") routeRoads = "via NH 7 / NH 44";
-        else if (from === "Patiala" && to === "Ludhiana") routeRoads = "via NH 44 / GT Road";
-        else if (from === "Patiala" && to === "Amritsar") routeRoads = "via NH 44";
-        else routeRoads = "via major Punjab highways";
+    const res = await r.json();
+    let trains = null;
+    if (res.data && Array.isArray(res.data.trains)) trains = res.data.trains;
+    else if (res.trains && Array.isArray(res.trains)) trains = res.trains;
+    
+    if (!trains) {
+      box.innerHTML = `<pre style="grid-column:1/-1;background:#fff;padding:16px;border-radius:12px;font-size:12px;overflow:auto;max-height:400px">${JSON.stringify(res, null, 2)}</pre>`;
+      return;
     }
 
-    // Build Timeline HTML dynamically
-    let timelineHtml = `
-        <div class="tl-item">
-            <div class="tl-node start"></div>
-            <div class="tl-body">
-                <div class="tl-title">Depart ${from}</div>
-                <div class="tl-sub">Start journey</div>
-            </div>
-        </div>
-    `;
-
-    if (showCrossing) {
-        timelineHtml += `
-            <div class="tl-item">
-                <div class="tl-node closing"></div>
-                <div class="tl-body">
-                    <div class="tl-title">${crossingName}</div>
-                    <div class="tl-sub">${crossingLoc}</div>
-                    <span class="tl-warn closing">Gate closing in 3m</span>
-                </div>
-            </div>
-        `;
+    if (trains.length === 0) {
+      box.innerHTML = `<div class="empty-state"><b>No trains in the selected window</b>Try 4, 6 or 8 hours.</div>`;
+      stat.textContent = '✅ 0 trains found';
+      return;
     }
 
-    timelineHtml += `
-        <div class="tl-item">
-            <div class="tl-node end"></div>
-            <div class="tl-body">
-                <div class="tl-title">Arrive ${to}</div>
-                <div class="tl-sub">${routeRoads}</div>
-            </div>
-        </div>
-    `;
+    box.innerHTML = trains.map(t => {
+      const tr = t.train || {};
+      const stop = t.stop || {};
+      const live = t.live || {};
 
-    // Render Result
-    resultsContainer.innerHTML = `
-      <div class="route-card best">
-        <div class="rc-head">
-          <div class="rc-title">${from} → ${to} <span class="rc-tag">${priority === 'time' ? 'Fastest' : 'Fewest Crossings'}</span></div>
-          <div class="rc-metrics">
-            <div class="rc-metric"><b>${timeStr}</b><span>Time</span></div>
-            <div class="rc-metric delay"><b>${delayStr}</b><span>Gate Delay</span></div>
+      const num = tr.number || '—';
+      const name = tr.name || 'Unknown Train';
+      const src = tr.source || '';
+      const dst = tr.destination || '';
+      const delay = Number(live.delayMinutes || 0);
+      
+      let eta = stop.departure || stop.arrival || '—';
+      if (live.expectedDepartureTime) eta = live.expectedDepartureTime.slice(11, 16);
+      else if (live.expectedArrivalTime) eta = live.expectedArrivalTime.slice(11, 16);
+
+      const pfRaw = live.platform || live.pf || live.platform_number || stop.platform || t.platform;
+      const platform = pfRaw ? `PF ${pfRaw}` : '—';
+      const delayed = delay > 0;
+      const statusType = live.type || 'scheduled';
+      const statusText = statusType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+      return `
+        <div class="crossing-card" style="border-left-color:${delayed ? 'var(--amber)' : 'var(--green)'}" data-status="${delayed ? 'CLOSING' : 'OPEN'}">
+          <div class="cc-top">
+            <div>
+              <span class="cc-id">${num}</span>
+              <h3 class="cc-name">${name}</h3>
+              <p class="cc-loc">${src}${dst ? ' → ' + dst : ''}</p>
+            </div>
+            <span class="badge ${delayed ? 'closing' : 'open'}"><span class="dot"></span>${delayed ? 'Delayed' : statusText}</span>
+          </div>
+          <div class="cc-meta">
+            <div><span>Time</span><strong>${eta}</strong></div>
+            <div><span>Delay</span><strong>${delay} min</strong></div>
+            <div><span>Platform</span><strong>${platform}</strong></div>
           </div>
         </div>
-        <div class="timeline">
-          ${timelineHtml}
-        </div>
-        <div class="rc-foot">
-          <div class="rc-note">${showCrossing ? 'Route includes 1 active level crossing.' : 'Clear route. No level crossings on this path.'}</div>
-        </div>
-      </div>
-    `;
-  });
+      `;
+    }).join('');
+    stat.textContent = '✅ Live data loaded';
 
-  // Misc
+  } catch (e) {
+    box.innerHTML = `<div class="empty-state"><b>Fetch failed</b>${e.message}<br>Check your internet connection or Render logs.</div>`;
+    stat.textContent = '❌ Failed';
+    console.error('[RailRadar]', e);
+  }
+}
+document.getElementById('loadLiveBtn').addEventListener('click', loadLiveTrains);
+
+
+const navAnchors = $$('#navLinks a');
+new IntersectionObserver(entries => entries.forEach(en => {
+  if (en.isIntersecting) navAnchors.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id));
+}), { rootMargin:'-45% 0px -50% 0px' });
+['home','live-trains','planner'].forEach(id => { const el = document.getElementById(id); if (el) el.scrollIntoView; });
+
+async function loadInitialData(){
+  // Load Kaggle data first
+  await loadKaggleData();
+
+  try {
+    const [cr, ci] = await Promise.all([fetch(API_BASE + '/api/crossings'), fetch(API_BASE + '/api/cities')]);
+    if (!cr.ok || !ci.ok) throw new Error();
+    const cj = await cr.json(); const ij = await ci.json();
+    
+    // Map Kaggle weather/closing times to crossings
+    CROSSINGS = cj.crossings.map(c => {
+        const k = getKaggleRow();
+        return { ...c, secondsToNext: c.secondsToNext || c.expectedWait || 60, maxTimer: c.secondsToNext || 60, avgWaitMinutes: c.avgWaitMinutes, weather: k.weather, actualClosingTime: k.actualClosingTime };
+    });
+    CITIES = ij.cities;
+  } catch (err) {
+    console.warn('API not reachable, using fallback data', err);
+    
+    // Map Kaggle weather/closing times to fallbacks
+    CROSSINGS = FALLBACK_CROSSINGS.map(c => {
+        const k = getKaggleRow();
+        return { ...c, maxTimer: c.secondsToNext, weather: k.weather, actualClosingTime: k.actualClosingTime };
+    });
+    CITIES = FALLBACK_CITIES;
+  }
+  renderHeroStats();
+  renderBoard();
+  populateSelects();
+}
+
+function tick(){
+  CROSSINGS.forEach(c => {
+    c.secondsToNext = (c.secondsToNext || 60) - 1;
+    if (c.secondsToNext <= 0){
+      const old = c.status;
+      const T = TRANSITIONS[c.status];
+      c.status = T.next;
+      
+      if (c.status === 'CLOSED') {
+          // Use Kaggle actual_closing_time to determine wait, scaled down for UI
+          c.secondsToNext = Math.min(Math.round((c.actualClosingTime || 15) * 2), 30);
+      } else if (c.status === 'OPEN') {
+          // Pick a new Kaggle row for the next train cycle
+          const k = getKaggleRow();
+          c.weather = k.weather;
+          c.actualClosingTime = k.actualClosingTime;
+          c.secondsToNext = rand(T.min, T.max); 
+      } else {
+          c.secondsToNext = rand(T.min, T.max);
+      }
+      
+      c.maxTimer = c.secondsToNext;
+      
+      if (old === 'CLOSED' && c.status === 'OPEN' && watched.has(c.id)){
+        showToast(`${c.name} is now OPEN.`, '✅', 5000);
+        watched.delete(c.id);
+      }
+    }
+  });
+  renderBoard(); renderHeroStats();
+  const cl = document.getElementById('boardClock'); if (cl) cl.textContent = fmtClock(new Date());
+}
+
+(async function boot(){
   document.getElementById('year').textContent = new Date().getFullYear();
+  await loadInitialData();
+  tick();
+  setInterval(tick, 1000);
+})();
 </script>
 </body>
 </html>

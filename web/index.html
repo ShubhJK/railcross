@@ -497,7 +497,9 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-  // --- Kaggle Dataset Integration & OOP Classes ---
+  // ==========================================
+  // 1. KAGGLE DATASET & SIMULATED BOARD LOGIC
+  // ==========================================
   class Train {
     constructor(record) {
       this.speed = parseFloat(record.speed_kmh) || 50;
@@ -552,15 +554,10 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
   const statsEl = document.getElementById('heroStats');
   const clockEl = document.getElementById('boardClock');
 
-  // Clock
   setInterval(() => {
-    if (clockEl) {
-      const now = new Date();
-      clockEl.textContent = now.toLocaleTimeString('en-US', { hour12: false });
-    }
+    if (clockEl) clockEl.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
   }, 1000);
 
-  // Load Kaggle CSV
   Papa.parse("railway_data.csv", {
     download: true, header: true, skipEmptyLines: true,
     complete: (res) => {
@@ -569,9 +566,7 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
         listEl.innerHTML = "<div class='empty-state'><b>CSV is empty.</b></div>";
         return;
       }
-      const countEl = document.getElementById('record-count');
-      if (countEl) countEl.textContent = dataset.length;
-
+      document.getElementById('record-count').textContent = dataset.length;
       crossings.forEach(c => assignNewTrain(c));
       setInterval(tick, 1000);
       updateBoardUI(); 
@@ -597,7 +592,6 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
       } else {
         c.eta -= 1;
         if (c.eta < 15 && c.state === 'OPEN') c.state = 'CLOSING';
-        
         if (c.eta <= 0) {
           c.state = 'CLOSED';
           c.closedTimeRemaining = Math.min(Math.round(c.train.actualClosingTime), 25); 
@@ -608,7 +602,6 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
   }
 
   function updateBoardUI() {
-    // 1. Update Stats
     if (statsEl) {
       let openCount = crossings.filter(c => c.state === 'OPEN' || c.state === 'CLOSING').length;
       let closedCount = crossings.filter(c => c.state === 'CLOSED').length;
@@ -623,11 +616,9 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
       `;
     }
 
-    // 2. Filter & Sort List
     let displayCrossings = crossings.filter(c => {
       let matchesFilter = currentFilter === 'ALL' || c.state === currentFilter;
-      let matchesSearch = c.name.toLowerCase().includes(currentSearch.toLowerCase()) || 
-                          c.location.toLowerCase().includes(currentSearch.toLowerCase());
+      let matchesSearch = c.name.toLowerCase().includes(currentSearch.toLowerCase()) || c.location.toLowerCase().includes(currentSearch.toLowerCase());
       return matchesFilter && matchesSearch;
     });
 
@@ -641,7 +632,6 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
       return 0;
     });
 
-    // 3. Render Rows
     if (listEl) {
       if (displayCrossings.length === 0) {
         listEl.innerHTML = "<div class='empty-state'><b>No crossings found</b>Try a different search or filter.</div>";
@@ -667,41 +657,143 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
     }
   }
 
-  // 4. Event Listeners for Toolbar
-  const searchInput = document.getElementById('searchInput');
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      currentSearch = e.target.value;
-      updateBoardUI();
-    });
-  }
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    currentSearch = e.target.value;
+    updateBoardUI();
+  });
 
-  const chips = document.querySelectorAll('.chip-dark');
-  chips.forEach(chip => {
+  document.querySelectorAll('.chip-dark').forEach(chip => {
     chip.addEventListener('click', (e) => {
-      chips.forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.chip-dark').forEach(c => c.classList.remove('active'));
       e.target.classList.add('active');
       currentFilter = e.target.getAttribute('data-filter');
       updateBoardUI();
     });
   });
 
-  const sortSelect = document.getElementById('sortSelect');
-  if (sortSelect) {
-    sortSelect.addEventListener('change', (e) => {
-      currentSort = e.target.value;
-      updateBoardUI();
-    });
-  }
+  document.getElementById('sortSelect').addEventListener('change', (e) => {
+    currentSort = e.target.value;
+    updateBoardUI();
+  });
 
-  // Misc (Footer, modal close)
+
+  // ==========================================
+  // 2. LIVE TRAINS SECTION LOGIC
+  // ==========================================
+  const liveTrainsBox = document.getElementById('liveTrainsBox');
+  const loadLiveBtn = document.getElementById('loadLiveBtn');
+  const liveStatus = document.getElementById('liveStatus');
+
+  loadLiveBtn.addEventListener('click', () => {
+    liveStatus.textContent = "Fetching...";
+    setTimeout(() => {
+      const mockTrains = [
+        { name: "Shane Punjab Express", type: "Express", eta: "12 mins", delay: "On Time", color: "var(--green-ink)" },
+        { name: "Patiala - Delhi Jn", type: "Superfast", eta: "34 mins", delay: "Delayed 5m", color: "var(--amber-ink)" },
+        { name: "Amritsar - Mumbai CSMT", type: "Express", eta: "1 hr 5m", delay: "On Time", color: "var(--green-ink)" }
+      ];
+
+      liveTrainsBox.innerHTML = mockTrains.map(t => `
+        <div class="crossing-card" data-status="OPEN" style="border-left-color: var(--green);">
+          <div class="cc-top">
+            <div>
+              <div class="cc-name">${t.name}</div>
+              <div class="cc-loc">${t.type}</div>
+            </div>
+            <div class="badge open" style="background: var(--green-bg); color: var(--green-ink);">ARRIVING</div>
+          </div>
+          <div class="cc-timer">
+            <span class="cc-timer-label">Arriving in</span>
+            <div class="cc-timer-val g">${t.eta}</div>
+          </div>
+          <div class="cc-meta">
+            <div><span>Status</span><strong style="color:${t.color}">${t.delay}</strong></div>
+            <div><span>Platform</span><strong>3</strong></div>
+            <div><span>Source</span><strong>PTA</strong></div>
+          </div>
+        </div>
+      `).join('');
+      liveStatus.textContent = "Data loaded successfully.";
+    }, 800);
+  });
+
+
+  // ==========================================
+  // 3. ROUTE PLANNER LOGIC
+  // ==========================================
+  const cities = ["Patiala", "Rajpura", "Sirhind", "Ludhiana", "Jalandhar", "Amritsar", "Bathinda", "Chandigarh"];
+  const fromSelect = document.getElementById('fromSelect');
+  const toSelect = document.getElementById('toSelect');
+  const swapBtn = document.getElementById('swapBtn');
+  const plannerForm = document.getElementById('plannerForm');
+  const resultsContainer = document.getElementById('resultsContainer');
+
+  // Populate dropdowns
+  cities.forEach(city => {
+    fromSelect.innerHTML += `<option value="${city}">${city}</option>`;
+    toSelect.innerHTML += `<option value="${city}">${city}</option>`;
+  });
+  toSelect.value = "Rajpura"; // Default destination
+
+  swapBtn.addEventListener('click', () => {
+    let temp = fromSelect.value;
+    fromSelect.value = toSelect.value;
+    toSelect.value = temp;
+  });
+
+  plannerForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const from = fromSelect.value;
+    const to = toSelect.value;
+    if (from === to) {
+      resultsContainer.innerHTML = "<div class='empty-state'><b>Invalid Route</b>Origin and destination cannot be the same.</div>";
+      return;
+    }
+
+    // Mock route generation
+    resultsContainer.innerHTML = `
+      <div class="route-card best">
+        <div class="rc-head">
+          <div class="rc-title">${from} → ${to} <span class="rc-tag">Fastest</span></div>
+          <div class="rc-metrics">
+            <div class="rc-metric"><b>1h 15m</b><span>Time</span></div>
+            <div class="rc-metric delay"><b>+2m</b><span>Gate Delay</span></div>
+          </div>
+        </div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-node start"></div>
+            <div class="tl-body">
+              <div class="tl-title">Depart ${from}</div>
+              <div class="tl-sub">Start journey</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-node closing"></div>
+            <div class="tl-body">
+              <div class="tl-title">Crossing No. 20</div>
+              <div class="tl-sub">Patiala · Northern Railway</div>
+              <span class="tl-warn closing">Gate closing in 3m</span>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-node end"></div>
+            <div class="tl-body">
+              <div class="tl-title">Arrive ${to}</div>
+              <div class="tl-sub">Destination reached</div>
+            </div>
+          </div>
+        </div>
+        <div class="rc-foot">
+          <div class="rc-note">Avoids 2 other closed crossings on this route.</div>
+          <button class="btn btn-primary btn-sm">Start Navigation</button>
+        </div>
+      </div>
+    `;
+  });
+
+  // Misc
   document.getElementById('year').textContent = new Date().getFullYear();
-  const modalOverlay = document.getElementById('modalOverlay');
-  if (modalOverlay) {
-    document.getElementById('modalClose').addEventListener('click', () => {
-      modalOverlay.classList.remove('show');
-    });
-  }
 </script>
 </body>
 </html>

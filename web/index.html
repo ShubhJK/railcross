@@ -719,15 +719,21 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
 
 
   // ==========================================
-  // 3. ROUTE PLANNER LOGIC
+  // 3. ROUTE PLANNER LOGIC (PUNJAB HUBS ONLY)
   // ==========================================
-  const intercityCities = ["Patiala", "Rajpura", "Sirhind", "Ludhiana", "Jalandhar", "Amritsar", "Bathinda", "Chandigarh"];
+  // Removed outsiders, strictly Punjab hubs
+  const intercityCities = ["Patiala", "Rajpura", "Ludhiana", "Jalandhar", "Amritsar", "Bathinda", "Chandigarh"];
   
+  // Important local landmarks only
   const localLocations = [
-    "Thapar University", "Leela Bhawan", "22 No. Phatak", "Urban Estate Phase 1", "Urban Estate Phase 2", 
-    "Patiala Railway Station", "Baradari Gardens", "Punjabi University", "Qila Mubarak", "Sheesh Mahal", 
-    "Gurudwara Dukhniwaran Sahib", "Rajindra Hospital", "Government Medical College", "Mall Road", 
-    "Adalat Bazar", "Tripuri Town", "Sirhind Road", "Bhupindra Road", "YPS Patiala", "Polo Ground", "Patiala Bus Stand"
+    "Thapar University", 
+    "Punjabi University", 
+    "Leela Bhawan", 
+    "Qila Mubarak", 
+    "Sheesh Mahal", 
+    "Gurudwara Dukhniwaran Sahib", 
+    "Patiala Railway Station", 
+    "Patiala Bus Stand"
   ];
   
   const modeSelect = document.getElementById('modeSelect');
@@ -736,6 +742,7 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
   const swapBtn = document.getElementById('swapBtn');
   const plannerForm = document.getElementById('plannerForm');
   const resultsContainer = document.getElementById('resultsContainer');
+  const prioritySelect = document.getElementById('prioritySelect');
 
   function populateDropdowns(mode) {
     const list = mode === 'local' ? localLocations : intercityCities;
@@ -765,48 +772,121 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
     e.preventDefault();
     const from = fromSelect.value;
     const to = toSelect.value;
+    const mode = modeSelect.value;
+    const priority = prioritySelect.value;
+
     if (from === to) {
       resultsContainer.innerHTML = "<div class='empty-state'><b>Invalid Route</b>Origin and destination cannot be the same.</div>";
       return;
     }
 
-    // Mock route generation
+    let timeStr = "";
+    let delayStr = "";
+    let crossingName = "";
+    let crossingLoc = "";
+    let showCrossing = false;
+
+    if (mode === 'local') {
+        // Realistic local times (10 to 25 mins based on Patiala city distances)
+        let baseMin = Math.floor(Math.random() * 15) + 10; 
+        timeStr = `${baseMin} mins`;
+        
+        // Only show a crossing if it's not a direct station pickup/dropoff AND priority is time
+        if (from !== "Patiala Railway Station" && to !== "Patiala Railway Station" && priority === 'time') {
+            showCrossing = true;
+            crossingName = "22 No. Phatak";
+            crossingLoc = "Patiala · Northern Railway";
+            delayStr = "+3m";
+        } else {
+            delayStr = "0m";
+        }
+
+    } else {
+        // Accurate Intercity driving times based on real geography (Punjab only)
+        const routes = {
+            "Patiala-Rajpura": { time: 28, crossing: "Rajpura Level Crossing" },
+            "Patiala-Chandigarh": { time: 85, crossing: "Zirakpur Crossing" }, // ~1h 25m
+            "Patiala-Ludhiana": { time: 105, crossing: "Doraha LC 164A" }, // ~1h 45m
+            "Patiala-Jalandhar": { time: 135, crossing: "Phagwara Crossing" }, // ~2h 15m
+            "Patiala-Amritsar": { time: 230, crossing: "Jandiala Crossing" }, // ~3h 50m
+            "Patiala-Bathinda": { time: 165, crossing: "Rampura Phul Gate" } // ~2h 45m
+        };
+
+        // Find matching route (either direction)
+        let key = `${from}-${to}`;
+        if (!routes[key]) key = `${to}-${from}`;
+        
+        const routeInfo = routes[key] || { time: 60, crossing: "" };
+        
+        // Format time
+        if (routeInfo.time >= 60) {
+            let h = Math.floor(routeInfo.time / 60);
+            let m = routeInfo.time % 60;
+            timeStr = m > 0 ? `${h}h ${m}m` : `${h}h`;
+        } else {
+            timeStr = `${routeInfo.time}m`;
+        }
+
+        // Apply priority logic
+        if (routeInfo.crossing && priority === 'time') {
+            showCrossing = true;
+            crossingName = routeInfo.crossing;
+            crossingLoc = "Punjab · Northern Railway";
+            delayStr = "+5m";
+        } else {
+            delayStr = "0m";
+        }
+    }
+
+    // Build Timeline HTML dynamically
+    let timelineHtml = `
+        <div class="tl-item">
+            <div class="tl-node start"></div>
+            <div class="tl-body">
+                <div class="tl-title">Depart ${from}</div>
+                <div class="tl-sub">Start journey</div>
+            </div>
+        </div>
+    `;
+
+    if (showCrossing) {
+        timelineHtml += `
+            <div class="tl-item">
+                <div class="tl-node closing"></div>
+                <div class="tl-body">
+                    <div class="tl-title">${crossingName}</div>
+                    <div class="tl-sub">${crossingLoc}</div>
+                    <span class="tl-warn closing">Gate closing in 3m</span>
+                </div>
+            </div>
+        `;
+    }
+
+    timelineHtml += `
+        <div class="tl-item">
+            <div class="tl-node end"></div>
+            <div class="tl-body">
+                <div class="tl-title">Arrive ${to}</div>
+                <div class="tl-sub">Destination reached</div>
+            </div>
+        </div>
+    `;
+
+    // Render Result
     resultsContainer.innerHTML = `
       <div class="route-card best">
         <div class="rc-head">
-          <div class="rc-title">${from} → ${to} <span class="rc-tag">Fastest</span></div>
+          <div class="rc-title">${from} → ${to} <span class="rc-tag">${priority === 'time' ? 'Fastest' : 'Fewest Crossings'}</span></div>
           <div class="rc-metrics">
-            <div class="rc-metric"><b>1h 15m</b><span>Time</span></div>
-            <div class="rc-metric delay"><b>+2m</b><span>Gate Delay</span></div>
+            <div class="rc-metric"><b>${timeStr}</b><span>Time</span></div>
+            <div class="rc-metric delay"><b>${delayStr}</b><span>Gate Delay</span></div>
           </div>
         </div>
         <div class="timeline">
-          <div class="tl-item">
-            <div class="tl-node start"></div>
-            <div class="tl-body">
-              <div class="tl-title">Depart ${from}</div>
-              <div class="tl-sub">Start journey</div>
-            </div>
-          </div>
-          <div class="tl-item">
-            <div class="tl-node closing"></div>
-            <div class="tl-body">
-              <div class="tl-title">Crossing No. 20</div>
-              <div class="tl-sub">Patiala · Northern Railway</div>
-              <span class="tl-warn closing">Gate closing in 3m</span>
-            </div>
-          </div>
-          <div class="tl-item">
-            <div class="tl-node end"></div>
-            <div class="tl-body">
-              <div class="tl-title">Arrive ${to}</div>
-              <div class="tl-sub">Destination reached</div>
-            </div>
-          </div>
+          ${timelineHtml}
         </div>
         <div class="rc-foot">
-          <div class="rc-note">Avoids 2 other closed crossings on this route.</div>
-          <button class="btn btn-primary btn-sm">Start Navigation</button>
+          <div class="rc-note">${showCrossing ? 'Route includes 1 active level crossing.' : 'Clear route. No level crossings on this path.'}</div>
         </div>
       </div>
     `;

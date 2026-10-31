@@ -1,1056 +1,375 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>RailKross — Punjab Level Crossing Status & Route Planner</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%A6%3C/text%3E%3C/svg%3E" />
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RailKross — Never get stuck</title>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--butter-50:#F8F7E9;--butter-100:#E6F0C3;--butter-200:#C7DDAA;--butter-300:#A7BC9A;--butter-400:#9DBF7C;--butter-500:#718B5D;--butter-600:#526743;--butter-700:#3E5232;--ink:#263E36;--ink-2:#526753;--muted:#78866E;--line:#DCE6C8;--line-2:#C7DDAA;--green:#1F9D55;--green-bg:#DCF5E5;--green-ink:#0F6B39;--amber:#E08A00;--amber-bg:#FFF0D2;--amber-ink:#8F5600;--red:#D64545;--red-bg:#FFE3E3;--red-ink:#9E2323;--radius:18px;--shadow-sm:0 2px 10px rgba(140,110,20,.07);--shadow:0 6px 26px rgba(140,110,20,.11);--shadow-lg:0 18px 50px rgba(140,110,20,.18);--mono:'JetBrains Mono',ui-monospace,Menlo,monospace;}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;scroll-padding-top:92px}
-body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--ink);line-height:1.6;background:radial-gradient(1100px 620px at 8% -8%,#FBFDF8 0%,rgba(251,253,248,0) 62%),radial-gradient(900px 560px at 96% -2%,#E6F0C3 0%,rgba(230,240,195,0) 58%),radial-gradient(900px 700px at 50% 108%,#C7DDAA 0%,rgba(199,221,170,0) 62%),linear-gradient(180deg,#F8F7E9,#F1F6DE 45%,#E6F0C3);background-attachment:fixed;min-height:100vh}
-img,svg{display:block;max-width:100%}
-button,input,select{font:inherit;color:inherit}
-a{color:inherit}
-.container{width:min(1200px,100%);margin-inline:auto;padding-inline:24px}
-.nav{position:sticky;top:0;z-index:120;background:rgba(248,247,233,.82);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
-.nav-inner{width:min(1200px,100%);margin-inline:auto;padding:13px 24px;display:flex;align-items:center;gap:18px}
-.logo{display:flex;align-items:center;gap:11px;font-weight:800;font-size:1.16rem;text-decoration:none;flex-shrink:0;color:var(--ink)}
-.logo-mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(140deg,var(--butter-200),var(--butter-400) 55%,var(--butter-500));display:grid;place-items:center;font-size:19px;box-shadow:0 5px 14px rgba(113,139,93,.38)}
-.logo small{display:block;font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--butter-600);line-height:1;margin-top:2px}
-.nav-links{display:flex;gap:4px;margin-left:auto}
-.nav-links a{padding:9px 15px;border-radius:10px;text-decoration:none;color:var(--ink-2);font-weight:600;font-size:.9rem;transition:.18s}
-.nav-links a:hover{background:rgba(199,221,170,.42)}
-.nav-links a.active{background:var(--ink);color:var(--butter-200)}
+  :root {
+    --bg-page: #f7fbf5;
+    --bg-board: #1b3b2b;
+    --text-main: #0f2c1d;
+    --text-muted: #5c7366;
+    --accent-green: #34d399;
+    --accent-yellow: #fbbf24;
+    --accent-red: #f87171;
+    --card-bg: #ffffff;
+    --border-color: #e2ece6;
+    --board-border: #2d5240;
+    --board-text: #e2f0e9;
+    --board-sub: #8da89a;
+  }
 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;border-radius:13px;border:none;cursor:pointer;font-weight:700;font-size:.94rem;font-family:inherit;text-decoration:none;transition:.15s}
-.btn-primary{background:linear-gradient(140deg,#2B3E36,#1A2D25);color:#E6F0C3;box-shadow:0 8px 22px rgba(38,62,54,.26)}
-.btn-ghost{background:rgba(255,255,255,.78);color:var(--ink);border:1.5px solid var(--line-2);box-shadow:var(--shadow-sm)}
-.btn-sm{padding:9px 15px;font-size:.83rem;border-radius:10px}
-.btn-block{width:100%}
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
+  
+  body { background-color: var(--bg-page); color: var(--text-main); min-height: 100vh; line-height: 1.5; }
+  
+  /* Header */
+  header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: white; border-bottom: 1px solid var(--border-color); }
+  .logo-area { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { width: 40px; height: 40px; background: #a7f3d0; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 20px; }
+  .logo-text h1 { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.5px; }
+  .logo-text p { font-size: 0.65rem; color: var(--text-muted); letter-spacing: 1.5px; font-weight: 600; text-transform: uppercase; }
+  nav { display: flex; gap: 24px; align-items: center; }
+  nav a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.9rem; transition: color 0.2s; }
+  nav a:hover { color: var(--text-main); }
+  nav a.active { background: var(--bg-board); color: white; padding: 8px 16px; border-radius: 6px; }
 
-/* HERO */
-.hero{padding:80px 0;position:relative;overflow:hidden;}
-.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;position:relative;z-index:2;}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:7px 15px;border-radius:999px;background:rgba(255,255,255,.85);border:1.5px solid var(--line-2);font-size:.76rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--butter-600);margin-bottom:22px}
-.hero h1{font-size:clamp(2.3rem,4.6vw,3.6rem);line-height:1.06;font-weight:800;margin-bottom:20px;color:var(--ink)}
-.hero h1 .hl{background:linear-gradient(180deg,transparent 62%,var(--butter-300) 62%,var(--butter-300) 94%,transparent 94%);padding-inline:3px}
-.lede{font-size:1.08rem;color:var(--ink-2);max-width:56ch;margin-bottom:30px}
-.hero-cta{display:flex;gap:13px;flex-wrap:wrap;margin-bottom:38px}
-.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:600px}
-.stat{background:rgba(255,255,255,.72);border:1.5px solid var(--line);border-radius:14px;padding:13px 14px}
-.stat b{display:block;font-size:1.5rem;font-weight:800;line-height:1.15;color:var(--ink)}
-.stat span{font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
-.stat.g b{color:var(--green-ink)} .stat.r b{color:var(--red-ink)} .stat.a b{color:var(--amber-ink)}
+  /* Main Layout */
+  .container { display: flex; max-width: 1300px; margin: 0 auto; padding: 60px 40px; gap: 60px; align-items: flex-start; }
+  
+  /* Left Hero Section */
+  .hero { flex: 1; padding-top: 20px; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; background: white; padding: 8px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; border: 1px solid var(--border-color); margin-bottom: 24px; color: var(--text-main); }
+  .hero h2 { font-size: 4.2rem; line-height: 1.05; font-weight: 800; margin-bottom: 24px; letter-spacing: -2px; color: var(--text-main); }
+  .hero h2 span { background: #d1fae5; padding: 0 8px; border-radius: 8px; display: inline-block; }
+  .hero p { font-size: 1.1rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 32px; max-width: 480px; font-weight: 400; }
+  
+  .cta-buttons { display: flex; gap: 16px; margin-bottom: 48px; }
+  .btn { padding: 14px 24px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: transform 0.1s; }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--bg-board); color: white; }
+  .btn-secondary { background: white; color: var(--text-main); border: 1px solid var(--border-color); }
 
-/* MERGED BOARD & TOOLBAR */
-.board-wrapper {
-  background: linear-gradient(165deg,#2B3E36,#1A2D25);
-  border: 1px solid #405E52;
-  border-radius: 22px;
-  padding: 20px;
-  box-shadow: var(--shadow-lg);
-  color: #F8F7E9;
-  position: relative;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  height: 600px;
-}
-.board-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 14px;
-  border-bottom: 1px solid #405E52;
-  margin-bottom: 14px;
-}
-.board-title {
-  display: flex; align-items: center; gap: 9px;
-  font-size: .72rem; font-weight: 800;
-  letter-spacing: .13em; text-transform: uppercase;
-  color: var(--butter-300);
-}
-.board-clock { font-family: var(--mono); font-size: .72rem; color: #78866E; }
+  .stats { display: flex; gap: 16px; }
+  .stat-card { background: white; padding: 20px 24px; border-radius: 12px; flex: 1; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; }
+  .stat-card h3 { font-size: 1.8rem; font-weight: 800; letter-spacing: -1px; }
+  .stat-card p { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
 
-/* Dark Toolbar */
-.toolbar-dark { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-.search-wrap-dark { position: relative; flex: 1 1 100%; }
-.search-wrap-dark input { width: 100%; padding: 10px 14px 10px 36px; border-radius: 10px; border: 1px solid #405E52; background: #1F3129; color: #F8F7E9; font-size: .85rem; outline: none; }
-.search-wrap-dark svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: .5; }
-.search-wrap-dark input:focus { border-color: var(--butter-400); }
-.chips-dark { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
-.chip-dark { padding: 6px 12px; border-radius: 999px; border: 1px solid #405E52; background: transparent; color: #78866E; font-size: .75rem; font-weight: 700; cursor: pointer; transition: .18s; }
-.chip-dark.active { background: var(--butter-400); color: #1A2D25; border-color: var(--butter-400); }
-.toolbar-dark select { padding: 8px 12px; border-radius: 10px; border: 1px solid #405E52; background: #1F3129; color: #F8F7E9; font-size: .75rem; font-weight: 600; cursor: pointer; outline: none; }
+  /* Right Board Section */
+  .board { width: 520px; background: var(--bg-board); border-radius: 16px; padding: 24px; color: var(--board-text); box-shadow: 0 24px 48px rgba(27,59,43,0.15); display: flex; flex-direction: column; }
+  .board-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .board-header h3 { font-size: 0.75rem; letter-spacing: 1.5px; color: var(--board-sub); text-transform: uppercase; font-weight: 700; }
+  .board-header .clock { font-family: 'Inter', monospace; font-size: 0.85rem; color: var(--board-sub); font-weight: 500; }
+  
+  .search-bar { background: rgba(255,255,255,0.03); border: 1px solid var(--board-border); padding: 12px 16px; border-radius: 8px; color: white; width: 100%; margin-bottom: 16px; outline: none; font-size: 0.9rem; transition: border 0.2s; }
+  .search-bar:focus { border-color: #4ade80; }
+  .search-bar::placeholder { color: var(--board-sub); }
 
-/* Board List */
-.board-list { flex: 1; overflow-y: auto; padding-right: 5px; }
-.board-list::-webkit-scrollbar { width: 6px; }
-.board-list::-webkit-scrollbar-thumb { background: #405E52; border-radius: 6px; }
-.board-row{display:flex;align-items:center;gap:12px;padding:12px 8px;border-bottom:1px dashed #405E5260; transition: background 0.2s; border-radius: 8px;}
-.board-row:hover { background: rgba(255,255,255,0.03); }
-.board-row:last-child{border-bottom:none}
-.board-row .br-info { flex: 1; min-width: 0; }
-.board-row .br-name{font-size:.9rem;font-weight:700;color:#F8F7E9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-.board-row .br-city{font-size:.75rem;color:#A7BC9A;font-weight:600}
-.board-row .br-time{font-family:var(--mono);font-size:.8rem;font-weight:700;text-align:right; white-space: nowrap;}
-.br-pill{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.pill-open{background:#4ADE80;box-shadow:0 0 10px #4ADE8080}
-.pill-closing{background:#FBBF24;box-shadow:0 0 10px #FBBF2480;animation:blink 1s infinite}
-.pill-closed{background:#F87171;box-shadow:0 0 10px #F8717180}
-@keyframes blink{50%{opacity:.35}}
-.t-open{color:#86EFAC}.t-closing{color:#FCD34D}.t-closed{color:#FCA5A5}
-.board-footer { text-align: center; font-size: .7rem; color: #78866E; padding-top: 12px; border-top: 1px solid #405E52; margin-top: 10px; }
-.board-footer span { color: #86EFAC; font-weight: 700; }
+  .filters { display: flex; justify-content: space-between; margin-bottom: 20px; gap: 12px; }
+  .filter-tabs { display: flex; gap: 8px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 8px; }
+  .filter-tab { background: transparent; border: none; color: var(--board-sub); padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .filter-tab.active { background: #4ade80; color: var(--bg-board); }
+  
+  .sort-dropdown { background: rgba(255,255,255,0.05); border: 1px solid var(--board-border); color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 500; outline: none; cursor: pointer; }
 
-/* OTHER SECTIONS */
-section{padding:62px 0}
-.section-head{max-width:740px;margin-bottom:36px}
-.section-tag{display:inline-block;font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--butter-600);margin-bottom:12px}
-.section-head h2{font-size:clamp(1.75rem,3.1vw,2.4rem);font-weight:800;margin-bottom:14px;color:var(--ink)}
-.section-head p{color:var(--ink-2);font-size:1.02rem}
-.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;background:rgba(255,255,255,.78);border:1.5px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:22px}
-.search-wrap{position:relative;flex:1 1 240px;min-width:200px}
-.search-wrap input{width:100%;padding:12px 14px 12px 42px;border-radius:12px;border:1.5px solid var(--line-2);background:#fff;font-size:.92rem;outline:none}
-.search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:.45}
-.search-wrap input:focus{border-color:var(--butter-400)}
-.crossing-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:18px}
-.crossing-card{background:rgba(255,255,255,.86);border:1.5px solid var(--line);border-left:5px solid var(--green);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:13px;box-shadow:var(--shadow-sm);transition:.2s}
-.crossing-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
-.crossing-card[data-status="OPEN"]{border-left-color:var(--green)}
-.crossing-card[data-status="CLOSING"]{border-left-color:var(--amber)}
-.crossing-card[data-status="CLOSED"]{border-left-color:var(--red)}
-.cc-top{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
-.cc-name{font-size:1rem;font-weight:800;line-height:1.28}
-.cc-loc{font-size:.76rem;color:var(--muted);font-weight:600;margin-top:3px}
-.cc-id{display:inline-block;font-family:var(--mono);font-size:.66rem;font-weight:700;color:var(--butter-600);background:var(--butter-100);border:1px solid var(--line-2);padding:2px 7px;border-radius:6px;margin-bottom:6px}
-.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;flex-shrink:0;font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
-.badge .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
-.badge.open{background:var(--green-bg);color:var(--green-ink)}
-.badge.closing{background:var(--amber-bg);color:var(--amber-ink)}
-.badge.closed{background:var(--red-bg);color:var(--red-ink)}
-.cc-timer{background:linear-gradient(140deg,var(--butter-50),var(--butter-100));border:1px dashed var(--line-2);border-radius:12px;padding:11px 13px}
-.cc-timer-label{display:block;font-size:.68rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
-.cc-timer-val{font-family:var(--mono);font-size:1.02rem;font-weight:700;color:var(--ink)}
-.cc-timer-val.g{color:var(--green-ink)} .cc-timer-val.a{color:var(--amber-ink)} .cc-timer-val.r{color:var(--red-ink)}
-.cc-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.cc-meta>div{background:rgba(230,240,195,.72);border-radius:10px;padding:8px 9px}
-.cc-meta span{display:block;font-size:.62rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
-.cc-meta strong{font-size:.8rem;font-weight:700;color:var(--ink-2)}
-.cc-bar{height:5px;border-radius:99px;background:var(--butter-200);overflow:hidden}
-.cc-bar i{display:block;height:100%;border-radius:99px;transition:width .9s linear}
-.cc-bar i.open{background:var(--green)} .cc-bar i.closing{background:var(--amber)} .cc-bar i.closed{background:var(--red)}
-.cc-actions{display:flex;gap:8px;margin-top:auto}
-.cc-actions .btn{flex:1}
-.empty-state{text-align:center;padding:40px 20px;color:#78866E;}
-.empty-state b{display:block;font-size:1.05rem;color:#F8F7E9;margin-bottom:6px}
-.planner-wrap{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start}
-.planner-form{background:rgba(255,255,255,.9);border:1.5px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
-.planner-form h3{font-size:1.1rem;font-weight:800;margin-bottom:4px}
-.planner-form .pf-sub{font-size:.82rem;color:var(--muted);margin-bottom:18px}
-.field{margin-bottom:15px}
-.field label{display:block;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
-.field select,.field input{width:100%;padding:12px 13px;border-radius:12px;border:1.5px solid var(--line-2);background:#fff;font-size:.9rem;font-weight:600;outline:none}
-.field select:focus,.field input:focus{border-color:var(--butter-400)}
-.swap-row{display:flex;justify-content:center;margin:-8px 0 8px}
-.swap-btn{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line-2);background:#fff;cursor:pointer;display:grid;place-items:center;font-size:1rem}
-.swap-btn:hover{background:var(--butter-200);transform:rotate(180deg)}
-.results-head h3{font-size:1.12rem;font-weight:800}
-.results-head .rh-sub{font-size:.82rem;color:var(--muted)}
-.route-card{background:rgba(255,255,255,.88);border:1.5px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow-sm);position:relative}
-.route-card.best{border-color:var(--butter-400);border-width:2px;background:linear-gradient(150deg,#FBFDF8,#F1F6DE)}
-.route-card.best::before{content:'★ RECOMMENDED';position:absolute;top:0;right:0;background:linear-gradient(135deg,var(--butter-300),var(--butter-400));color:#1A2D25;font-size:.62rem;font-weight:800;letter-spacing:.1em;padding:5px 14px;border-bottom-left-radius:12px}
-.rc-head{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:14px}
-.rc-title{font-size:1.05rem;font-weight:800}
-.rc-tag{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:6px;background:var(--butter-200);color:var(--butter-600);margin-left:8px;vertical-align:middle}
-.rc-metrics{margin-left:auto;display:flex;gap:18px;flex-wrap:wrap}
-.rc-metric{text-align:right}
-.rc-metric b{display:block;font-family:var(--mono);font-size:1.15rem;font-weight:700;line-height:1.2}
-.rc-metric span{font-size:.62rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.rc-metric.delay b{color:var(--amber-ink)}
-.timeline{margin:14px 0;padding-left:6px}
-.tl-item{display:flex;gap:13px;position:relative;padding-bottom:14px}
-.tl-item::before{content:'';position:absolute;left:8px;top:20px;bottom:0;width:2px;background:repeating-linear-gradient(180deg,var(--line-2) 0 5px,transparent 5px 10px)}
-.tl-item:last-child::before{display:none}
-.tl-node{width:18px;height:18px;border-radius:50%;flex-shrink:0;margin-top:2px;border:3px solid #fff;box-shadow:0 0 0 2px var(--line-2);background:var(--butter-400);z-index:1}
-.tl-node.start,.tl-node.end{background:var(--ink)}
-.tl-node.open{background:var(--green);box-shadow:0 0 0 2px var(--green)}
-.tl-node.closing{background:var(--amber);box-shadow:0 0 0 2px var(--amber)}
-.tl-node.closed{background:var(--red);box-shadow:0 0 0 2px var(--red)}
-.tl-body{flex:1}
-.tl-title{font-size:.88rem;font-weight:700}
-.tl-sub{font-size:.76rem;color:var(--muted);font-weight:600}
-.tl-warn{font-size:.76rem;font-weight:700;margin-top:4px;display:inline-block;padding:3px 9px;border-radius:7px}
-.tl-warn.closed{background:var(--red-bg);color:var(--red-ink)}
-.tl-warn.closing{background:var(--amber-bg);color:var(--amber-ink)}
-.tl-warn.open{background:var(--green-bg);color:var(--green-ink)}
-.rc-foot{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding-top:14px;border-top:1px dashed var(--line-2)}
-.rc-note{font-size:.78rem;color:var(--muted);font-weight:600;flex:1}
-.modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(38,62,54,.55);backdrop-filter:blur(6px);display:grid;place-items:center;padding:22px;opacity:0;visibility:hidden;transition:.25s}
-.modal-overlay.show{opacity:1;visibility:visible}
-.modal{background:linear-gradient(165deg,#FBFDF8,#F1F6DE);border:1.5px solid var(--line-2);border-radius:22px;width:min(560px,100%);max-height:88vh;overflow-y:auto}
-.modal-head{padding:22px 24px 16px;border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:flex-start}
-.modal-head h3{font-size:1.18rem;font-weight:800}
-.modal-head p{font-size:.8rem;color:var(--muted);font-weight:600;margin-top:3px}
-.modal-close{margin-left:auto;width:34px;height:34px;border-radius:10px;border:1.5px solid var(--line-2);background:#fff;cursor:pointer;display:grid;place-items:center;font-size:1.1rem}
-.modal-body{padding:20px 24px 24px}
-.modal-status{border-radius:14px;padding:16px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.modal-status.open{background:var(--green-bg);border:1.5px solid #A8E5C3}
-.modal-status.closing{background:var(--amber-bg);border:1.5px solid #F5D79B}
-.modal-status.closed{background:var(--red-bg);border:1.5px solid #F3B4B4}
-.modal-status .ms-label{font-size:.7rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;opacity:.75}
-.modal-status .ms-value{font-family:var(--mono);font-size:1.25rem;font-weight:700}
-.modal-status .ms-train{margin-left:auto;text-align:right;font-size:.78rem;font-weight:700}
-.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:18px}
-.detail-item{background:rgba(255,255,255,.75);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
-.detail-item span{display:block;font-size:.64rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
-.detail-item strong{font-size:.87rem;font-weight:700}
-.alt-box{background:linear-gradient(140deg,var(--butter-100),var(--butter-200));border:1.5px dashed var(--butter-500);border-radius:14px;padding:15px;margin-bottom:18px}
-.alt-box span{display:block;font-size:.66rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--butter-600);margin-bottom:5px}
-.alt-box strong{font-size:.92rem;font-weight:700}
-.modal-actions{display:flex;gap:10px;flex-wrap:wrap}
-.modal-actions .btn{flex:1;min-width:140px}
-.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:400;display:flex;flex-direction:column;gap:10px;pointer-events:none}
-.toast{background:linear-gradient(140deg,#2B3E36,#1A2D25);color:#F8F7E9;padding:14px 18px;border-radius:14px;font-size:.87rem;font-weight:600;box-shadow:var(--shadow-lg);border:1px solid #405E52;display:flex;align-items:center;gap:11px;max-width:340px;pointer-events:auto}
-.toast .t-ico{font-size:1.05rem}
+  .crossing-list { flex: 1; overflow-y: auto; max-height: 520px; padding-right: 4px; display: flex; flex-direction: column; gap: 2px; }
+  
+  .crossing-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .crossing-item:last-child { border-bottom: none; }
+  
+  .crossing-info { display: flex; align-items: center; gap: 12px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .dot.open { background: var(--accent-green); box-shadow: 0 0 8px rgba(52, 211, 153, 0.4); }
+  .dot.closing { background: var(--accent-yellow); box-shadow: 0 0 8px rgba(251, 191, 36, 0.4); }
+  .dot.closed { background: var(--accent-red); box-shadow: 0 0 8px rgba(248, 113, 113, 0.4); }
+  
+  .details h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; color: #ffffff; }
+  .details p { font-size: 0.7rem; color: var(--board-sub); font-weight: 500; }
+  
+  .status-text { font-family: 'Inter', monospace; font-size: 0.85rem; font-weight: 600; text-align: right; }
+  .status-text.open { color: var(--accent-green); }
+  .status-text.closing { color: var(--accent-yellow); }
+  .status-text.closed { color: var(--accent-red); }
 
-/* BOTTOM RAILWAY SCENE */
-.bottom-railway-wrapper { position: relative; width: 100%; height: 120px; overflow: hidden; margin-top: 60px; background: linear-gradient(to bottom, transparent, rgba(157,191,124,0.15)); }
-.track-bed{position:absolute;bottom:30px;width:100%;height:4px;background:#718B5D;border-top:1px solid #526743;border-bottom:1px solid #526743;}
-.track-sleepers{position:absolute;bottom:24px;width:200%;height:10px;background-image:repeating-linear-gradient(90deg, transparent, transparent 25px, #3E5232 25px, #3E5232 30px);animation:moveTrack 1.5s linear infinite;}
-@keyframes moveTrack{to{transform:translateX(-30px);}}
-.moving-train{position:absolute;bottom:32px;left:-900px;width:880px;height:85px;animation:driveTrain 25s linear infinite;}
-@keyframes driveTrain{0%{transform:translateX(0);}100%{transform:translateX(calc(100vw + 900px));}}
-.wheel{transform-box:fill-box;transform-origin:center;animation:spinWheels 0.8s linear infinite;}
-@keyframes spinWheels{100%{transform:rotate(360deg);}}
+  .board-footer { text-align: center; font-size: 0.7rem; color: var(--board-sub); margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--board-border); display: flex; justify-content: center; align-items: center; gap: 6px; font-weight: 500; }
+  .board-footer .dot { width: 6px; height: 6px; background: var(--accent-green); box-shadow: none; }
 
-footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-top:40px;}
-.foot-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1.2fr;gap:34px;margin-bottom:34px}
-.foot-brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:1.12rem;color:#F8F7E9;margin-bottom:13px}
-.foot-brand .logo-mark{width:34px;height:34px;font-size:17px;border-radius:10px}
-.foot-col p{font-size:.85rem;line-height:1.7;color:#78866E}
-.foot-col h5{font-size:.72rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--butter-300);margin-bottom:14px}
-.foot-col ul{list-style:none;display:flex;flex-direction:column;gap:9px}
-.foot-col a{font-size:.86rem;text-decoration:none;color:#A7BC9A}
-.foot-col a:hover{color:var(--butter-300)}
-.foot-sub{display:flex;gap:8px;margin-top:12px}
-.foot-sub input{flex:1;padding:11px 13px;border-radius:11px;border:1px solid #405E52;background:#1F3129;color:#F8F7E9;font-size:.83rem;outline:none}
-.foot-sub button{padding:11px 17px;border-radius:11px;border:none;cursor:pointer;background:linear-gradient(140deg,var(--butter-300),var(--butter-400));color:#1A2D25;font-weight:800;font-size:.83rem}
-.foot-bottom{padding-top:22px;border-top:1px solid #405E52;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:.78rem;color:#78866E}
-.is-hidden{display:none !important}
-@media (max-width:1020px){.hero-grid{grid-template-columns:1fr}.planner-wrap{grid-template-columns:1fr}.foot-grid{grid-template-columns:1fr 1fr}}
-@media (max-width:760px){.nav-links{display:none}.hero-stats{grid-template-columns:repeat(2,1fr)}.detail-grid{grid-template-columns:1fr}.foot-grid{grid-template-columns:1fr}.bottom-railway-wrapper{height:80px;margin-top:20px;}.moving-train{animation-duration:15s;width:600px;height:58px;bottom:22px;left:-700px;}}
+  /* Scrollbar */
+  .crossing-list::-webkit-scrollbar { width: 4px; }
+  .crossing-list::-webkit-scrollbar-track { background: transparent; }
+  .crossing-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+  /* Bottom Sections */
+  .bottom-section { max-width: 1300px; margin: 40px auto; padding: 0 40px; }
+  .section-title h2 { font-size: 2rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px; }
+  .section-title p { color: var(--text-muted); margin-bottom: 24px; }
 </style>
 </head>
 <body>
 
-<header class="nav">
-  <div class="nav-inner">
-    <a href="#home" class="logo">
-      <span class="logo-mark">🚦</span>
-      <span>RailKross<small>Punjab · Patiala</small></span>
-    </a>
-    <nav class="nav-links" id="navLinks">
-      <a href="#home" class="active">Home</a>
-      <a href="#live-trains">Live Trains</a>
-      <a href="#planner">Route Planner</a>
-    </nav>
+<header>
+  <div class="logo-area">
+    <div class="logo-icon">🚦</div>
+    <div class="logo-text">
+      <h1>RailKross</h1>
+      <p>Punjab · Patiala</p>
+    </div>
   </div>
+  <nav>
+    <a href="#" class="active">Home</a>
+    <a href="#">Live Trains</a>
+    <a href="#">Route Planner</a>
+  </nav>
 </header>
 
-<section class="hero" id="home">
-  <div class="container hero-grid">
+<div class="container">
+  <!-- Left Hero -->
+  <div class="hero">
+    <div class="pill">🇮🇳 Patiala & Major Punjab Hubs</div>
+    <h2>Never get stuck at a <span>railway crossing</span> again.</h2>
+    <p>RailKross tells you whether a level crossing is open, about to close, or already closed — and exactly how long until it reopens. Then it plans a route that actually gets you there.</p>
     
-    <!-- Left Side: Text & Stats -->
-    <div>
-      <span class="eyebrow">
-        <!-- Real SVG Indian Flag instead of Emoji -->
-        <svg width="18" height="12" viewBox="0 0 30 20" style="border-radius:2px; margin-right:2px;">
-          <rect width="30" height="6.66" fill="#FF9933"/>
-          <rect y="6.66" width="30" height="6.66" fill="#FFFFFF"/>
-          <rect y="13.33" width="30" height="6.66" fill="#138808"/>
-          <circle cx="15" cy="10" r="2.5" fill="none" stroke="#000080" stroke-width="0.5"/>
-          <path d="M15 7.5v5M12.5 10h5M13.2 8.2l3.6 3.6M13.2 11.8l3.6-3.6" stroke="#000080" stroke-width="0.3"/>
-        </svg>
-        Patiala & Major Punjab Hubs
-      </span>
-      <h1>Never get stuck at a <span class="hl">railway crossing</span> again.</h1>
-      <p class="lede">RailKross tells you whether a level crossing is <strong>open</strong>, <strong>about to close</strong>, or already <strong>closed</strong> — and exactly how long until it reopens. Then it plans a route that actually gets you there.</p>
-      <div class="hero-cta">
-        <a href="#live-trains" class="btn btn-primary">🚆 See Live Trains →</a>
-        <a href="#planner" class="btn btn-ghost">🗺️ Plan my route</a>
-      </div>
-      <div class="hero-stats" id="heroStats"></div>
+    <div class="cta-buttons">
+      <button class="btn btn-primary">📍 See Live Trains →</button>
+      <button class="btn btn-secondary">🗺️ Plan my route</button>
     </div>
 
-    <!-- Right Side: Merged Dashboard -->
-    <div class="board-wrapper">
-      <div class="board-header-row">
-        <div class="board-title"><span class="live-dot"></span>Simulated Board</div>
-        <div class="board-clock" id="boardClock">--:--:--</div>
+    <div class="stats">
+      <div class="stat-card">
+        <h3 id="stat-total">17</h3>
+        <p>Crossings</p>
       </div>
-
-      <div class="toolbar-dark">
-        <div class="search-wrap-dark">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-          <input type="text" id="searchInput" placeholder="Search crossing, landmark or city…" autocomplete="off" />
-        </div>
-        <div class="chips-dark" id="statusChips">
-          <button class="chip-dark active" data-filter="ALL">All</button>
-          <button class="chip-dark" data-filter="OPEN">Open</button>
-          <button class="chip-dark" data-filter="CLOSING">Closing</button>
-          <button class="chip-dark" data-filter="CLOSED">Closed</button>
-        </div>
-        <select id="sortSelect">
-          <option value="name">Sort: A–Z</option>
-          <option value="wait">Sort: Longest wait</option>
-          <option value="status">Sort: Closed first</option>
-          <option value="trains">Sort: Busiest line</option>
-        </select>
+      <div class="stat-card">
+        <h3 id="stat-open" style="color: #16a34a;">0</h3>
+        <p>Open now</p>
       </div>
-
-      <div class="board-list" id="heroBoardList">
-        <!-- Rows injected by JS -->
+      <div class="stat-card">
+        <h3 id="stat-closed" style="color: #dc2626;">0</h3>
+        <p>Closed now</p>
       </div>
-
-      <div class="board-footer">
-        <span>●</span> Simulation Mode · Runs offline
+      <div class="stat-card">
+        <h3 id="stat-wait" style="color: #ca8a04;">0s</h3>
+        <p>Avg wait</p>
       </div>
     </div>
-
   </div>
-</section>
 
-<!-- LIVE TRAINS FROM RAILRADAR -->
-<section id="live-trains" style="background: rgba(199,221,170,.1); border-bottom: 1px solid var(--line);">
-  <div class="container">
-    <div class="section-head">
-      <span class="section-tag">Official Live Data</span>
-      <h2>Trains at the station — right now</h2>
-      <p>Real-time data fetched directly from RailRadar API. Select a station near your crossing to see arriving trains.</p>
+  <!-- Right Board -->
+  <div class="board">
+    <div class="board-header">
+      <h3>Simulated Board</h3>
+      <div class="clock" id="live-clock">00:00:00</div>
     </div>
-
-    <div class="toolbar">
-      <select id="liveStationSelect" style="flex:1;">
-        <option value="PTA">PTA — Patiala</option>
-        <option value="PTE">PTE — Patiala Cantt.</option>
-        <option value="RPJ">RPJ — Rajpura Junction</option>
-        <option value="SIR">SIR — Sirhind</option>
-        <option value="LDH">LDH — Ludhiana</option>
-        <option value="JUC">JUC — Jalandhar City</option>
-        <option value="ASR">ASR — Amritsar</option>
-        <option value="BTI">BTI — Bathinda</option>
+    
+    <input type="text" class="search-bar" placeholder="Search crossing, landmark or city...">
+    
+    <div class="filters">
+      <div class="filter-tabs">
+        <button class="filter-tab active">All</button>
+        <button class="filter-tab">Open</button>
+        <button class="filter-tab">Closing</button>
+        <button class="filter-tab">Closed</button>
+      </div>
+      <select class="sort-dropdown">
+        <option>Sort: A-Z</option>
       </select>
-      <select id="liveHoursSelect">
-        <option value="2">Next 2 hours</option>
-        <option value="4">Next 4 hours</option>
-        <option value="6">Next 6 hours</option>
-        <option value="8">Next 8 hours</option>
-      </select>
-      <button class="btn btn-primary" id="loadLiveBtn">🔄 Fetch Live Data</button>
-      <span id="liveStatus" style="font-size:.83rem;color:var(--muted);font-weight:600"></span>
     </div>
 
-    <div class="crossing-grid" id="liveTrainsBox">
-      <div class="empty-state">
-        <b>Click "Fetch Live Data" to load real trains</b>
-        Powered by RailRadar API
-      </div>
+    <div class="crossing-list" id="crossing-list">
+      <div style="color: var(--board-sub); text-align: center; margin-top: 20px; font-size: 0.9rem;">Loading Kaggle Dataset...</div>
     </div>
-  </div>
-</section>
 
-<section id="planner">
-  <div class="container">
-    <div class="section-head">
-      <span class="section-tag">Route planner</span>
-      <h2>Plan around the gate, not into it.</h2>
-      <p>Pick your origin and destination. RailKross finds crossings on your way and ranks the routes that get you there fastest.</p>
+    <div class="board-footer">
+      <div class="dot"></div> Simulation Mode · Loaded <span id="record-count">0</span> real rows
     </div>
-    <div class="planner-wrap">
-      <form class="planner-form" id="plannerForm">
-        <h3>Trip details</h3>
-        <p class="pf-sub">Choose between cities, or Patiala local.</p>
-        
-        <div class="field">
-          <label for="modeSelect">Mode</label>
-          <select id="modeSelect">
-            <option value="intercity">Intercity (Punjab)</option>
-            <option value="local">Patiala Local</option>
-          </select>
-        </div>
-
-        <div class="field"><label for="fromSelect">From</label><select id="fromSelect"></select></div>
-        <div class="swap-row"><button type="button" class="swap-btn" id="swapBtn">⇅</button></div>
-        <div class="field"><label for="toSelect">To</label><select id="toSelect"></select></div>
-        
-        <div class="field" id="timeField"><label for="departInput">Departure time</label><input type="time" id="departInput" value="09:00" /></div>
-        <div class="field"><label for="prioritySelect">Priority</label>
-          <select id="prioritySelect">
-            <option value="time">Fastest arrival</option>
-            <option value="crossings">Fewest crossings</option>
-          </select>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">🔍 Find routes</button>
-      </form>
-      <div>
-        <div class="results-head">
-          <h3 id="resultsTitle">Route options</h3>
-          <div class="rh-sub" id="resultsSub">Set your trip details and hit “Find routes”.</div>
-        </div>
-        <div id="resultsContainer">
-          <div class="empty-state"><b>No route calculated yet</b>Choose origin and destination on the left.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- BOTTOM ANIMATED TRAIN (MATCHA EDITION) -->
-<div class="bottom-railway-wrapper" aria-hidden="true">
-  <div class="track-sleepers"></div>
-  <div class="track-bed"></div>
-  <div class="moving-train">
-    <svg viewBox="0 -10 880 95" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Coach 3 -->
-      <rect x="20" y="20" width="180" height="35" rx="2" fill="#263E36" />
-      <rect x="20" y="42" width="180" height="8" fill="#9DBF7C" />
-      <rect x="30" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <rect x="56" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <rect x="82" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <rect x="108" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <rect x="134" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <rect x="160" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <!-- Gangway 2 -->
-      <rect x="200" y="26" width="12" height="23" fill="#1A2D25" />
-      <!-- Coach 2 -->
-      <rect x="212" y="20" width="180" height="35" rx="2" fill="#263E36" />
-      <rect x="212" y="42" width="180" height="8" fill="#9DBF7C" />
-      <rect x="222" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <rect x="248" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <rect x="274" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <rect x="300" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <rect x="326" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <rect x="352" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <!-- Gangway 1 -->
-      <rect x="392" y="26" width="12" height="23" fill="#1A2D25" />
-      <!-- Coach 1 -->
-      <rect x="404" y="20" width="180" height="35" rx="2" fill="#263E36" />
-      <rect x="404" y="42" width="180" height="8" fill="#9DBF7C" />
-      <rect x="414" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <rect x="440" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <rect x="466" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <rect x="492" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <rect x="518" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <rect x="544" y="26" width="16" height="10" rx="1" fill="#E6F0C3" />
-      <!-- Engine Gangway -->
-      <rect x="584" y="26" width="12" height="23" fill="#1A2D25" />
-      <!-- Engine (WAP-7 Style) -->
-      <path d="M 596 20 L 760 20 Q 790 20 815 40 L 820 55 L 820 55 L 596 55 Z" fill="#263E36" />
-      <path d="M 596 42 L 805 42 Q 815 42 818 47 L 820 55 L 596 55 Z" fill="#9DBF7C" />
-      <rect x="620" y="12" width="100" height="8" rx="2" fill="#35584B" />
-      <path d="M 650 12 L 660 2 L 680 2 L 690 12" stroke="#718B5D" stroke-width="2" fill="none" />
-      <line x1="670" y1="2" x2="670" y2="-2" stroke="#718B5D" stroke-width="2" />
-      <rect x="610" y="24" width="40" height="12" rx="2" fill="#1A2D25" />
-      <rect x="660" y="24" width="40" height="12" rx="2" fill="#1A2D25" />
-      <path d="M 720 24 L 750 24 L 760 34 L 720 34 Z" fill="#E6F0C3" />
-      <rect x="770" y="24" width="20" height="10" fill="#E6F0C3" />
-      <rect x="812" y="45" width="6" height="4" rx="1" fill="#F8F7E9" />
-      <!-- Bogeys -->
-      <rect x="40" y="55" width="60" height="4" fill="#35584B" /><rect x="120" y="55" width="60" height="4" fill="#35584B" />
-      <g class="wheel"><circle cx="55" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="55" cy="57" r="2" fill="#718B5D"/></g>
-      <g class="wheel"><circle cx="85" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="85" cy="57" r="2" fill="#718B5D"/></g>
-      <g class="wheel"><circle cx="135" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="135" cy="57" r="2" fill="#718B5D"/></g>
-      <g class="wheel"><circle cx="165" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="165" cy="57" r="2" fill="#718B5D"/></g>
-      <rect x="232" y="55" width="60" height="4" fill="#35584B" /><rect x="312" y="55" width="60" height="4" fill="#35584B" />
-      <g class="wheel"><circle cx="247" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="247" cy="57" r="2" fill="#718B5D"/></g>
-      <g class="wheel"><circle cx="277" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="277" cy="57" r="2" fill="#718B5D"/></g>
-      <g class="wheel"><circle cx="327" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="327" cy="57" r="2" fill="#718B5D"/></g>
-      <g class="wheel"><circle cx="357" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="357" cy="57" r="2" fill="#718B5D"/></g>
-      <rect x="424" y="55" width="60" height="4" fill="#35584B" /><rect x="504" y="55" width="60" height="4" fill="#35584B" />
-      <g class="wheel"><circle cx="439" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="439" cy="57" r="2" fill="#718B5D"/></g>
-      <g class="wheel"><circle cx="469" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="469" cy="57" r="2" fill="#718B5D"/></g>
-      <g class="wheel"><circle cx="519" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="519" cy="57" r="2" fill="#718B5D"/></g>
-      <g class="wheel"><circle cx="549" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="549" cy="57" r="2" fill="#718B5D"/></g>
-      <rect x="640" y="55" width="70" height="4" fill="#35584B" /><rect x="740" y="55" width="60" height="4" fill="#35584B" />
-      <g class="wheel"><circle cx="655" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="655" cy="57" r="2" fill="#718B5D"/></g>
-      <g class="wheel"><circle cx="690" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="690" cy="57" r="2" fill="#718B5D"/></g>
-      <g class="wheel"><circle cx="755" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="755" cy="57" r="2" fill="#718B5D"/></g>
-      <g class="wheel"><circle cx="785" cy="57" r="7" fill="#1A2D25" stroke="#718B5D" stroke-width="1.5"/><circle cx="785" cy="57" r="2" fill="#718B5D"/></g>
-    </svg>
   </div>
 </div>
 
-<footer>
-  <div class="container">
-    <div class="foot-grid">
-      <div class="foot-col">
-        <div class="foot-brand"><span class="logo-mark">🚦</span> RailKross</div>
-        <p>Punjab-focused railway level-crossing information and route-planning platform. OOPS semester project in C++.</p>
-      </div>
-      <div class="foot-col"><h5>Product</h5><ul><li><a href="#live-trains">Live Trains</a></li><li><a href="#planner">Route planner</a></li></ul></div>
-      <div class="foot-col"><h5>Project</h5><ul><li><a href="#home">Documentation</a></li></ul></div>
-      <div class="foot-col">
-        <h5>Crossing alerts</h5>
-        <form class="foot-sub" id="subscribeForm">
-          <input type="email" id="subscribeEmail" placeholder="you@example.com" required />
-          <button type="submit">Notify me</button>
-        </form>
-      </div>
-    </div>
-    <div class="foot-bottom">
-      <span>© <span id="year"></span> RailKross · OOPS Semester Project · Powered by RailRadar API</span>
-      <span>Made with 🧡 for Punjabi commuters</span>
-    </div>
-  </div>
-</footer>
-
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <div class="modal-head">
-      <div><h3 id="modalTitle">Crossing</h3><p id="modalSub">—</p></div>
-      <button class="modal-close" id="modalClose">✕</button>
-    </div>
-    <div class="modal-body" id="modalBody"></div>
+<!-- Bottom Section -->
+<div class="bottom-section">
+  <div class="section-title">
+    <h2>Official Live Data</h2>
+    <p>Trains at the station — right now. Real-time data fetched directly from RailRadar API.</p>
   </div>
 </div>
-
-<div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-const API_BASE = (location.protocol === 'file:') ? 'http://localhost:8080' : '';
-
-let CROSSINGS = [];
-let CITIES = [];
-
-/* PATIALA LOCAL ROUTING DATA - ACCURATE GEOGRAPHY */
-const PATIALA_LOCATIONS = [
-  "Model Town", "Thapar University", "Baradari Gardens", "Leela Bhawan", 
-  "Passy Road", "Dukhniwaran Sahib", "Patiala Cantt", "Qila Mubarak", 
-  "Old Bus Stand", "New Bus Stand"
-];
-
-const LOCAL_ROUTES = [
-  // --- SAME SIDE (North/East) -> 0 CROSSINGS ---
-  { from: "Model Town", to: "Thapar University", crossingIds: [], bypass: "Via Bhupindra Road", dist: 3.5, bypassDist: 4.2, time: 9, bypassTime: 12 },
-  { from: "Thapar University", to: "Model Town", crossingIds: [], bypass: "Via Bhupindra Road", dist: 3.5, bypassDist: 4.2, time: 9, bypassTime: 12 },
-  
-  { from: "Baradari Gardens", to: "Thapar University", crossingIds: [], bypass: "Via Leela Bhawan / Passy Road", dist: 3.6, bypassDist: 4.8, time: 10, bypassTime: 15 },
-  { from: "Thapar University", to: "Baradari Gardens", crossingIds: [], bypass: "Via Leela Bhawan / Passy Road", dist: 3.6, bypassDist: 4.8, time: 10, bypassTime: 15 },
-  
-  { from: "Passy Road", to: "Thapar University", crossingIds: [], bypass: "Via Dukhniwaran Road", dist: 2.8, bypassDist: 4.2, time: 8, bypassTime: 13 },
-  { from: "Thapar University", to: "Passy Road", crossingIds: [], bypass: "Via Dukhniwaran Road", dist: 2.8, bypassDist: 4.2, time: 8, bypassTime: 13 },
-  
-  { from: "Old Bus Stand", to: "Thapar University", crossingIds: [], bypass: "Via Leela Bhawan / Mall Road", dist: 4.2, bypassDist: 5.8, time: 13, bypassTime: 19 },
-  { from: "Thapar University", to: "Old Bus Stand", crossingIds: [], bypass: "Via Leela Bhawan / Mall Road", dist: 4.2, bypassDist: 5.8, time: 13, bypassTime: 19 },
-  
-  { from: "Model Town", to: "Baradari Gardens", crossingIds: [], bypass: "Via Leela Bhawan Chowk", dist: 2.2, bypassDist: 3.1, time: 6, bypassTime: 10 },
-  { from: "Baradari Gardens", to: "Model Town", crossingIds: [], bypass: "Via Leela Bhawan Chowk", dist: 2.2, bypassDist: 3.1, time: 6, bypassTime: 10 },
-  
-  { from: "Model Town", to: "Leela Bhawan", crossingIds: [], bypass: "Via Baradari", dist: 1.5, bypassDist: 2.2, time: 4, bypassTime: 7 },
-  { from: "Leela Bhawan", to: "Model Town", crossingIds: [], bypass: "Via Baradari", dist: 1.5, bypassDist: 2.2, time: 4, bypassTime: 7 },
-  
-  { from: "Thapar University", to: "Dukhniwaran Sahib", crossingIds: [], bypass: "Via Sirhind Road Bypass", dist: 3.2, bypassDist: 4.5, time: 9, bypassTime: 13 },
-  { from: "Dukhniwaran Sahib", to: "Thapar University", crossingIds: [], bypass: "Via Sirhind Road Bypass", dist: 3.2, bypassDist: 4.5, time: 9, bypassTime: 13 },
-  
-  { from: "Qila Mubarak", to: "Old Bus Stand", crossingIds: [], bypass: "Via Leela Bhawan", dist: 1.8, bypassDist: 2.5, time: 5, bypassTime: 8 },
-  { from: "Old Bus Stand", to: "Qila Mubarak", crossingIds: [], bypass: "Via Leela Bhawan", dist: 1.8, bypassDist: 2.5, time: 5, bypassTime: 8 },
-
-  // --- CROSSING THE TRACKS (North to South/West) ---
-  { from: "Patiala Cantt", to: "Thapar University", crossingIds: ["PB-PTA-024"], bypass: "Via Sangrur Bypass", dist: 4.5, bypassDist: 5.8, time: 12, bypassTime: 16 },
-  { from: "Thapar University", to: "Patiala Cantt", crossingIds: ["PB-PTA-024"], bypass: "Via Sangrur Bypass", dist: 4.5, bypassDist: 5.8, time: 12, bypassTime: 16 },
-  
-  { from: "New Bus Stand", to: "Thapar University", crossingIds: ["PB-PTA-SANGRUR"], bypass: "Via Ring Road Bypass", dist: 5.5, bypassDist: 7.0, time: 15, bypassTime: 20 },
-  { from: "Thapar University", to: "New Bus Stand", crossingIds: ["PB-PTA-SANGRUR"], bypass: "Via Ring Road Bypass", dist: 5.5, bypassDist: 7.0, time: 15, bypassTime: 20 },
-  
-  { from: "Patiala Cantt", to: "Dukhniwaran Sahib", crossingIds: ["PB-PTA-023"], bypass: "Via Model Town Flyover", dist: 2.8, bypassDist: 3.5, time: 7, bypassTime: 10 },
-  { from: "Dukhniwaran Sahib", to: "Patiala Cantt", crossingIds: ["PB-PTA-023"], bypass: "Via Model Town Flyover", dist: 2.8, bypassDist: 3.5, time: 7, bypassTime: 10 },
-  
-  { from: "Leela Bhawan", to: "Patiala Cantt", crossingIds: ["PB-PTA-024"], bypass: "Via 22 No. Phatak Bypass", dist: 3.2, bypassDist: 4.8, time: 8, bypassTime: 12 },
-  { from: "Patiala Cantt", to: "Leela Bhawan", crossingIds: ["PB-PTA-024"], bypass: "Via 22 No. Phatak Bypass", dist: 3.2, bypassDist: 4.8, time: 8, bypassTime: 12 },
-  
-  { from: "Qila Mubarak", to: "New Bus Stand", crossingIds: ["PB-PTA-019"], bypass: "Via Mall Road", dist: 2.5, bypassDist: 3.5, time: 7, bypassTime: 11 },
-  { from: "New Bus Stand", to: "Qila Mubarak", crossingIds: ["PB-PTA-019"], bypass: "Via Mall Road", dist: 2.5, bypassDist: 3.5, time: 7, bypassTime: 11 }
-];
-
-const $ = (s, r = document) => r.querySelector(s);
-const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
-const pick = a => a[Math.floor(Math.random() * a.length)];
-
-function fmtTime(s){ s = Math.max(0, Math.round(s)); const m = Math.floor(s/60), x = s%60; return m > 0 ? `${m}m ${String(x).padStart(2,'0')}s` : `${x}s`; }
-function fmtClock(d){ return d.toLocaleTimeString('en-IN', { hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit' }); }
-function statusKey(s){ return s === 'OPEN' ? 'open' : s === 'CLOSING' ? 'closing' : 'closed'; }
-function statusLabel(s){ return s === 'OPEN' ? 'Open' : s === 'CLOSING' ? 'Closing soon' : 'Closed'; }
-function statusColors(s){ return s === 'OPEN' ? { bar:'var(--green)', text:'var(--green-ink)' } : s === 'CLOSING' ? { bar:'var(--amber)', text:'var(--amber-ink)' } : { bar:'var(--red)', text:'var(--red-ink)' }; }
-function hashString(str){ let h = 2166136261; for (let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
-function mulberry32(seed){ return function(){ seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-function haversine(a, b){ const R = 6371, dLat = (b.lat - a.lat) * Math.PI / 180, dLng = (b.lng - a.lng) * Math.PI / 180; const l1 = a.lat * Math.PI / 180, l2 = b.lat * Math.PI / 180; const h = Math.sin(dLat/2)**2 + Math.cos(l1) * Math.cos(l2) * Math.sin(dLng/2)**2; return 2 * R * Math.asin(Math.sqrt(h)); }
-
-const toastWrap = $('#toastWrap');
-function showToast(msg, ico = 'ℹ️', dur = 3600){
-  const el = document.createElement('div');
-  el.className = 'toast';
-  el.innerHTML = `<span class="t-ico">${ico}</span><span>${msg}</span>`;
-  toastWrap.appendChild(el);
-  setTimeout(() => el.remove(), dur);
-}
-
-const FALLBACK_CROSSINGS = [
-  { id:'PB-PTA-020', name:'20 No. Phatak (Crossing No. 20)', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Baradari Garden area', avgWaitMinutes:9, dailyTrains:48, alternateRoute:'Baradari Garden Flyover / Mall Road Bypass', status:'OPEN', secondsToNext:58 },
-  { id:'PB-PTA-023', name:'23 No. Phatak (Crossing No. 23)', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Model Town, near Patiala Cantt Station', avgWaitMinutes:9, dailyTrains:50, alternateRoute:'Model Town Flyover', status:'CLOSING', secondsToNext:19 },
-  { id:'PB-PTA-024', name:'24 No. Phatak (Crossing No. 24)', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Near Patiala Cantt Station, Model Town', avgWaitMinutes:11, dailyTrains:54, alternateRoute:'Patiala Cantt Road / Sangrur Bypass', status:'OPEN', secondsToNext:33 },
-  { id:'PB-PTA-016', name:'Crossing No. 16', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Patiala city', avgWaitMinutes:8, dailyTrains:44, alternateRoute:'City Bypass Road', status:'OPEN', secondsToNext:64 },
-  { id:'PB-PTA-019', name:'Crossing No. 19', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Patiala city', avgWaitMinutes:8, dailyTrains:44, alternateRoute:'City Bypass Road', status:'CLOSED', secondsToNext:124 },
-  { id:'PB-PTA-SAMANA', name:'Patiala-Samana Road Crossing', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Patiala-Samana Branch', landmark:'Patiala-Samana Road', avgWaitMinutes:7, dailyTrains:22, alternateRoute:'Sangrur Road Bypass', status:'OPEN', secondsToNext:47 },
-  { id:'PB-PTA-RAJPURA', name:'Patiala-Rajpura Road Gate', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Main Line', landmark:'Patiala-Rajpura Road', avgWaitMinutes:11, dailyTrains:52, alternateRoute:'Rajpura Bypass via NH-44', status:'CLOSING', secondsToNext:23 },
-  { id:'PB-PTA-SANGRUR', name:'Sangrur Road Crossing', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Patiala-Sangrur Branch', landmark:'Sangrur Road, Patiala', avgWaitMinutes:6, dailyTrains:18, alternateRoute:'Sangrur Bypass via Bhawanigarh', status:'OPEN', secondsToNext:72 },
-  { id:'PB-PTA-CANAL', name:'Canal Level Crossing', city:'Patiala', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Rajpura-Bathinda Line', landmark:'Ranbirpura / Dhamo Majra', avgWaitMinutes:7, dailyTrains:30, alternateRoute:'Canal Road Bypass', status:'OPEN', secondsToNext:55 },
-  { id:'PB-RAJ-001', name:'Rajpura Junction Gate', city:'Rajpura', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Delhi-Amritsar Main Line', landmark:'Rajpura Junction', avgWaitMinutes:11, dailyTrains:58, alternateRoute:'Rajpura Bypass / NH-44', status:'CLOSED', secondsToNext:98 },
-  { id:'PB-SIR-001', name:'Sirhind-Barara LC 113/CE', city:'Sirhind', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Barara-Tandwal Section', landmark:'Sirhind', avgWaitMinutes:8, dailyTrains:32, alternateRoute:'NH-44 Bypass via Rajpura', status:'OPEN', secondsToNext:61 },
-  { id:'PB-LDH-001', name:'Ludhiana-Jalandhar LC C-43', city:'Ludhiana', state:'Punjab', zone:'Northern Railway', division:'Firozpur', line:'Jalandhar-Hoshiarpur Line', landmark:'Ludhiana city', avgWaitMinutes:8, dailyTrains:40, alternateRoute:'Ferozepur Road Flyover', status:'OPEN', secondsToNext:38 },
-  { id:'PB-JAL-001', name:'Jalandhar-Amritsar LC C-124', city:'Jalandhar', state:'Punjab', zone:'Northern Railway', division:'Firozpur', line:'Ludhiana-Amritsar Line', landmark:'Jalandhar city', avgWaitMinutes:12, dailyTrains:44, alternateRoute:'Kapurthala Road Bypass', status:'CLOSED', secondsToNext:76 },
-  { id:'PB-ASR-001', name:'Amritsar-Pathankot LC C-9', city:'Amritsar', state:'Punjab', zone:'Northern Railway', division:'Firozpur', line:'Amritsar-Pathankot Line', landmark:'Amritsar city', avgWaitMinutes:10, dailyTrains:36, alternateRoute:'GT Road Bypass / NH-354', status:'OPEN', secondsToNext:69 },
-  { id:'PB-BTI-001', name:'Bathinda-Delhi LC B/87', city:'Bathinda', state:'Punjab', zone:'Northern Railway', division:'Ambala', line:'Bathinda-Delhi Main Line', landmark:'Bathinda city', avgWaitMinutes:10, dailyTrains:50, alternateRoute:'Barnala Bypass', status:'CLOSING', secondsToNext:28 },
-  { id:'PB-DOR-001', name:'Doraha LC 164A', city:'Doraha', state:'Punjab', zone:'Northern Railway', division:'Firozpur', line:'Ambala-Ludhiana Section', landmark:'Doraha', avgWaitMinutes:13, dailyTrains:56, alternateRoute:'Doraha ROB / NH-44', status:'CLOSED', secondsToNext:142 }
-];
-
-const FALLBACK_CITIES = [
-  { name:'Patiala', lat:30.3398, lng:76.3869 }, { name:'Rajpura', lat:30.4833, lng:76.5945 },
-  { name:'Sirhind', lat:30.6432, lng:76.3821 }, { name:'Sangrur', lat:30.2458, lng:75.8421 },
-  { name:'Ludhiana', lat:30.9010, lng:75.8573 }, { name:'Jalandhar', lat:31.3260, lng:75.5762 },
-  { name:'Amritsar', lat:31.6340, lng:74.8723 }, { name:'Bathinda', lat:30.2110, lng:74.9455 },
-  { name:'Doraha', lat:30.7998, lng:76.0201 }, { name:'Chandigarh', lat:30.7333, lng:76.7794 },
-  { name:'Mohali', lat:30.7046, lng:76.7179 }, { name:'Moga', lat:30.8158, lng:75.1717 },
-  { name:'Firozpur', lat:30.9331, lng:74.6225 }, { name:'Pathankot', lat:32.2643, lng:75.6421 },
-  { name:'Hoshiarpur', lat:31.5143, lng:75.9115 }, { name:'Ambala', lat:30.3782, lng:76.7767 }
-];
-
-const TRANSITIONS = { OPEN:{next:'CLOSING',min:35,max:95}, CLOSING:{next:'CLOSED',min:16,max:34}, CLOSED:{next:'OPEN',min:70,max:170} };
-
-const boardList = $('#heroBoardList');
-let activeFilter = 'ALL', activeSort = 'name', searchTerm = '';
-
-function renderBoard(){
-  const order = { CLOSED:0, CLOSING:1, OPEN:2 };
-  
-  let filtered = CROSSINGS.filter(c => {
-    const ms = activeFilter === 'ALL' || c.status === activeFilter;
-    const hay = (c.name + ' ' + c.city + ' ' + c.state + ' ' + c.line + ' ' + c.id + ' ' + c.landmark).toLowerCase();
-    const mt = searchTerm === '' || hay.includes(searchTerm);
-    return ms && mt;
-  });
-
-  filtered.sort((a, b) => {
-    if (activeSort === 'name') return a.name.localeCompare(b.name);
-    if (activeSort === 'trains') return b.dailyTrains - a.dailyTrains;
-    if (activeSort === 'wait'){ if (order[a.status] !== order[b.status]) return order[a.status] - order[b.status]; return b.avgWaitMinutes - a.avgWaitMinutes; }
-    if (activeSort === 'status'){ return order[a.status] - order[b.status] || a.name.localeCompare(b.name); }
-    return 0;
-  });
-
-  if (filtered.length === 0) {
-    boardList.innerHTML = `<div class="empty-state"><b>No crossings match</b>Try a different filter or search.</div>`;
-    return;
-  }
-
-  boardList.innerHTML = filtered.map(c => {
-    const key = statusKey(c.status);
-    let t = c.status === 'OPEN' ? `closes ~${fmtTime(c.secondsToNext || 0)}` : c.status === 'CLOSING' ? `closing ${fmtTime(c.secondsToNext || 0)}` : `reopens ${fmtTime(c.secondsToNext || 0)}`;
-    return `
-      <div class="board-row">
-        <span class="br-pill pill-${key}"></span>
-        <div class="br-info">
-          <div class="br-name">${c.name}</div>
-          <div class="br-city">${c.city} · ${c.zone}</div>
-        </div>
-        <div class="br-time t-${key}">${t}</div>
-      </div>
-    `;
-  }).join('');
-}
-
-function renderHeroStats(){
-  const total = CROSSINGS.length;
-  const open = CROSSINGS.filter(c => c.status === 'OPEN').length;
-  const closed = CROSSINGS.filter(c => c.status === 'CLOSED').length;
-  const avg = total ? Math.round(CROSSINGS.reduce((s, c) => s + c.avgWaitMinutes, 0) / total) : 0;
-  $('#heroStats').innerHTML = `
-    <div class="stat"><b>${total}</b><span>Crossings</span></div>
-    <div class="stat g"><b>${open}</b><span>Open now</span></div>
-    <div class="stat r"><b>${closed}</b><span>Closed now</span></div>
-    <div class="stat a"><b>${avg}m</b><span>Avg wait</span></div>`;
-}
-
-$('#searchInput').addEventListener('input', e => { searchTerm = e.target.value.trim().toLowerCase(); renderBoard(); });
-$$('#statusChips .chip-dark').forEach(ch => ch.addEventListener('click', () => {
-  $$('#statusChips .chip-dark').forEach(c => c.classList.remove('active'));
-  ch.classList.add('active');
-  activeFilter = ch.dataset.filter;
-  renderBoard();
-}));
-$('#sortSelect').addEventListener('change', e => { activeSort = e.target.value; renderBoard(); });
-
-
-/* ROUTE PLANNER & MODAL */
-const overlay = $('#modalOverlay');
-let watched = new Set();
-
-function openModal(id){
-  const c = CROSSINGS.find(x => x.id === id); if (!c) return;
-  const key = statusKey(c.status);
-  const colors = statusColors(c.status);
-  let sv = c.status === 'OPEN' ? `Next closure in ~${fmtTime(c.secondsToNext || 0)}` : c.status === 'CLOSING' ? `Closing in ${fmtTime(c.secondsToNext || 0)}` : `Reopens in ${fmtTime(c.secondsToNext || 0)}`;
-  $('#modalTitle').textContent = c.name;
-  $('#modalSub').textContent = `${c.id} · ${c.landmark}, ${c.city} · ${c.zone}`;
-  $('#modalBody').innerHTML = `
-    <div class="modal-status ${key}">
-      <div><div class="ms-label">Current status</div><div class="ms-value" style="color:${colors.text}">${statusLabel(c.status)}</div></div>
-      <div class="ms-train">${c.train ? '🚆 ' + c.train : '✅ No train approaching'}</div>
-    </div>
-    <div class="detail-grid">
-      <div class="detail-item"><span>Countdown</span><strong>${sv}</strong></div>
-      <div class="detail-item"><span>Railway line</span><strong>${c.line}</strong></div>
-      <div class="detail-item"><span>Average wait</span><strong>${c.avgWaitMinutes} minutes</strong></div>
-      <div class="detail-item"><span>Trains per day</span><strong>${c.dailyTrains}</strong></div>
-      <div class="detail-item"><span>Division</span><strong>${c.division}</strong></div>
-      <div class="detail-item"><span>Landmark</span><strong>${c.landmark}</strong></div>
-    </div>
-    <div class="alt-box"><span>Recommended alternate route</span><strong>${c.alternateRoute}</strong></div>
-    <div class="modal-actions">
-      <button class="btn btn-primary" id="modalNotify">🔔 Notify me when open</button>
-    </div>`;
-  $('#modalNotify').addEventListener('click', () => {
-    if (watched.has(c.id)){ watched.delete(c.id); showToast(`Alerts off for ${c.name}.`, '🔕'); }
-    else { watched.add(c.id); showToast(`We'll alert you when ${c.name} reopens.`, '🔔'); }
-  });
-  overlay.classList.add('show');
-  document.body.style.overflow = 'hidden';
-}
-function closeModal(){ overlay.classList.remove('show'); document.body.style.overflow = ''; }
-$('#modalClose').addEventListener('click', closeModal);
-overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-
-const modeSelect = $('#modeSelect');
-const fromSelect = $('#fromSelect'), toSelect = $('#toSelect');
-
-function populateSelects() {
-  if (modeSelect.value === 'local') {
-    const opts = PATIALA_LOCATIONS.map(c => `<option value="${c}">${c}</option>`).join('');
-    fromSelect.innerHTML = opts; toSelect.innerHTML = opts;
-    fromSelect.value = 'Model Town'; toSelect.value = 'Thapar University';
-    $('#timeField').style.display = 'none';
-  } else {
-    const opts = CITIES.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-    fromSelect.innerHTML = opts; toSelect.innerHTML = opts;
-    fromSelect.value = 'Patiala'; toSelect.value = 'Chandigarh';
-    $('#timeField').style.display = 'block';
+// --- OOP Classes for your Professor ---
+class Train {
+  constructor(record) {
+    this.speed = parseFloat(record.speed_kmh) || 50;
+    this.distance = parseFloat(record.distance_km) || 2;
+    this.delay = parseFloat(record.delay_min) || 0;
+    this.weather = record.weather || 'Clear';
+    this.actualClosingTime = parseFloat(record.actual_closing_time) || 15;
+    
+    // ETA in seconds
+    let rawEta = this.speed > 0 ? (this.distance / this.speed) * 3600 : 60;
+    // Scale it down so the UI simulation moves fast enough to see
+    this.eta = rawEta > 180 ? Math.floor(Math.random() * 80) + 20 : Math.floor(rawEta);
   }
 }
 
-modeSelect.addEventListener('change', populateSelects);
-
-function crossingDelay(c){
-  if (c.status === 'OPEN') return c.avgWaitMinutes * 0.35;
-  if (c.status === 'CLOSING') return c.avgWaitMinutes * 0.8 + 1.5;
-  return (c.secondsToNext || 60) / 60 + c.avgWaitMinutes * 0.45;
+class RailwayGate {
+  constructor(id, name, location) {
+    this.id = id;
+    this.name = name;
+    this.location = location;
+    this.state = 'OPEN'; // OPEN, CLOSING, CLOSED
+    this.train = null;
+    this.eta = 0;
+    this.closedTimeRemaining = 0;
+  }
 }
-function crossingForCity(city){ return CROSSINGS.find(c => c.city === city) || null; }
 
-function renderRoutes(routes, fromName, toName, departTime, isLocal){
-  const c = $('#resultsContainer');
-  if (!routes.length){ c.innerHTML = '<div class="empty-state"><b>No routes available</b>Choose two different locations.</div>'; return; }
-  const priority = $('#prioritySelect').value;
-  
-  const ranked = [...routes].sort((a, b) => {
-    if (priority === 'crossings' && a.crossings.length !== b.crossings.length) {
-      return a.crossings.length - b.crossings.length;
+// The 17 Crossings from your screenshot
+const crossings = [
+  new RailwayGate(20, "20 No. Phatak (Crossing No. 20)", "Patiala · Northern Railway"),
+  new RailwayGate(21, "21 No. Phatak (Crossing No. 21)", "Patiala · Northern Railway"),
+  new RailwayGate(23, "23 No. Phatak (Crossing No. 23)", "Patiala · Northern Railway"),
+  new RailwayGate(24, "24 No. Phatak (Crossing No. 24)", "Patiala · Northern Railway"),
+  new RailwayGate(9, "Amritsar-Pathankot LC C-9", "Amritsar · Northern Railway"),
+  new RailwayGate(87, "Bathinda-Delhi LC B/87", "Bathinda · Northern Railway"),
+  new RailwayGate(1, "Canal Level Crossing", "Patiala · Northern Railway"),
+  new RailwayGate(16, "Crossing No. 16", "Patiala · Northern Railway"),
+  new RailwayGate(19, "Crossing No. 19", "Patiala · Northern Railway"),
+  new RailwayGate(164, "Doraha LC 164A", "Doraha · Northern Railway"),
+  new RailwayGate(124, "Jalandhar-Amritsar LC C-124", "Jalandhar · Northern Railway"),
+  new RailwayGate(43, "Ludhiana-Jalandhar LC C-43", "Ludhiana · Northern Railway"),
+  new RailwayGate(2, "Patiala-Rajpura Road Gate", "Patiala · Northern Railway"),
+  new RailwayGate(3, "Patiala-Samana Road Crossing", "Patiala · Northern Railway"),
+  new RailwayGate(4, "Rajpura Junction Gate", "Rajpura · Northern Railway"),
+  new RailwayGate(5, "Sangrur Road Crossing", "Patiala · Northern Railway"),
+  new RailwayGate(6, "Sirhind-Barara LC 113/CE", "Sirhind · Northern Railway")
+];
+
+let dataset = [];
+const listEl = document.getElementById('crossing-list');
+const $statOpen = document.getElementById('stat-open');
+const $statClosed = document.getElementById('stat-closed');
+const $statWait = document.getElementById('stat-wait');
+
+// Clock
+setInterval(() => {
+  const now = new Date();
+  document.getElementById('live-clock').textContent = now.toLocaleTimeString('en-US', { hour12: false });
+}, 1000);
+
+// Load Kaggle Dataset
+Papa.parse("railway_data.csv", {
+  download: true, header: true, skipEmptyLines: true,
+  complete: (res) => {
+    dataset = res.data;
+    if (!dataset || dataset.length === 0) {
+      listEl.innerHTML = "<div style='color:#f87171;text-align:center;'>CSV is empty. Check railway_data.csv.</div>";
+      return;
     }
-    return a.totalMinutes - b.totalMinutes;
-  });
-  
-  const best = ranked[0].id;
-  $('#resultsTitle').textContent = `${fromName} → ${toName}`;
-  $('#resultsSub').textContent = isLocal ? `Local trip · ${ranked.length} options` : `Departing ${departTime} · ${ranked.length} options`;
-  
-  c.innerHTML = ranked.map((r, i) => {
-    const isBest = r.id === best;
-    const th = Math.floor(r.totalMinutes / 60), tm = Math.round(r.totalMinutes % 60), dm = Math.round(r.delay);
     
-    const timeString = th > 0 ? `${th}h ${tm}m` : `${tm}m`;
-    const totalTimeString = th > 0 ? `${th}h ${tm}m total` : `${tm}m total`;
+    document.getElementById('record-count').textContent = dataset.length;
+    
+    // Assign a random Kaggle row to each crossing to start
+    crossings.forEach(c => assignNewTrain(c));
+    
+    // Start the UI update loop (every 1 second)
+    setInterval(tick, 1000);
+    renderBoard(); // Initial render
+  },
+  error: (err) => {
+    console.error(err);
+    listEl.innerHTML = "<div style='color:#f87171;text-align:center;padding:20px;'>Error loading CSV. Ensure railway_data.csv is in the same folder.</div>";
+  }
+});
 
-    const tl = [];
-    tl.push(`<div class="tl-item"><span class="tl-node start"></span><div class="tl-body"><div class="tl-title">Start · ${fromName}</div></div></div>`);
-    
-    if (r.crossings.length === 0) {
-      tl.push(`<div class="tl-item"><span class="tl-node open"></span><div class="tl-body"><div class="tl-title">No level crossings</div><span class="tl-warn open">✅ Clear run</span></div></div>`);
+function assignNewTrain(crossing) {
+  // Pick a random real row from the Kaggle dataset
+  const randomRecord = dataset[Math.floor(Math.random() * dataset.length)];
+  crossing.train = new Train(randomRecord);
+  crossing.eta = crossing.train.eta;
+  crossing.state = crossing.eta < 15 ? 'CLOSING' : 'OPEN';
+}
+
+function tick() {
+  crossings.forEach(c => {
+    if (c.state === 'CLOSED') {
+      c.closedTimeRemaining--;
+      if (c.closedTimeRemaining <= 0) {
+        assignNewTrain(c); // Pick new Kaggle row when gate reopens
+      }
     } else {
-      r.crossings.forEach(({ crossing, delay }) => {
-        const k = statusKey(crossing.status);
-        const wt = crossing.status === 'OPEN' ? `Likely clear · ~${Math.round(delay)} min risk` : crossing.status === 'CLOSING' ? `Closing soon · ~${Math.round(delay)} min wait` : `Gate down · ~${Math.round(delay)} min wait`;
-        tl.push(`<div class="tl-item"><span class="tl-node ${k}"></span><div class="tl-body"><div class="tl-title">${crossing.name}</div><div class="tl-sub">${crossing.landmark}</div><span class="tl-warn ${k}">${wt}</span></div></div>`);
-      });
-    }
-    
-    tl.push(`<div class="tl-item"><span class="tl-node end"></span><div class="tl-body"><div class="tl-title">Arrive · ${toName}</div><div class="tl-sub">Approx. ${totalTimeString}</div></div></div>`);
-    
-    const note = r.crossings.length === 0 ? 'Route bypasses all monitored crossings.' : r.riskCount === 0 ? 'All crossings currently open. Low risk.' : `${r.riskCount} crossing${r.riskCount > 1 ? 's' : ''} currently not open. Consider bypass.`;
-    
-    return `<article class="route-card ${isBest ? 'best' : ''}">
-      <div class="rc-head">
-        <div><div class="rc-title">${r.name}<span class="rc-tag">${r.tag}</span></div></div>
-        <div class="rc-metrics">
-          <div class="rc-metric"><b>${Math.round(r.distanceKm)}</b><span>km</span></div>
-          <div class="rc-metric"><b>${timeString}</b><span>total time</span></div>
-          <div class="rc-metric delay"><b>+${dm}m</b><span>crossing delay</span></div>
-        </div>
-      </div>
-      <div class="timeline">${tl.join('')}</div>
-      <div class="rc-foot"><span class="rc-note">${note}</span></div>
-    </article>`;
-  }).join('');
-}
-
-// INTERCITY LOGIC (With Accurate Real-World Distances)
-function planIntercityRoutes(fromName, toName){
-  const INTERCITY_DATA = {
-    "Patiala-Chandigarh": { dist: 70, time: 90 },
-    "Patiala-Ludhiana": { dist: 120, time: 120 },
-    "Patiala-Amritsar": { dist: 235, time: 240 },
-    "Patiala-Jalandhar": { dist: 155, time: 150 },
-    "Patiala-Bathinda": { dist: 150, time: 150 },
-    "Patiala-Ambala": { dist: 65, time: 75 },
-    "Patiala-Delhi": { dist: 250, time: 260 },
-    "Chandigarh-Ludhiana": { dist: 110, time: 120 },
-    "Chandigarh-Amritsar": { dist: 230, time: 240 },
-    "Ludhiana-Amritsar": { dist: 140, time: 140 }
-  };
-
-  const pairKey = `${fromName}-${toName}`;
-  const reverseKey = `${toName}-${fromName}`;
-  const routeInfo = INTERCITY_DATA[pairKey] || INTERCITY_DATA[reverseKey] || { dist: 120, time: 120 };
-
-  const originX = crossingForCity(fromName), destX = crossingForCity(toName);
-  const middles = CITIES.filter(c => c.name !== fromName && c.name !== toName);
-  const midCity = middles[0];
-  const midX = crossingForCity(midCity.name);
-
-  const templates = [
-    { name:'Main Highway Corridor', tag:'Most direct', crossings:[originX].filter(Boolean), distMul:1.00, timeMul:1.00 },
-    { name:'Ring Road Bypass', tag:'Zero crossings', crossings:[], distMul:1.15, timeMul:1.15 },
-    { name:'City Shortcut', tag:'Shortest distance', crossings:[originX, midX, destX].filter(Boolean), distMul:0.95, timeMul:1.05 }
-  ];
-
-  return templates.map(t => {
-    const seen = new Set();
-    const cs = t.crossings.filter(c => { if (!c || seen.has(c.id)) return false; seen.add(c.id); return true; });
-    const dist = routeInfo.dist * t.distMul;
-    const baseTime = routeInfo.time * t.timeMul;
-    let delay = 0;
-    const det = cs.map(c => { const d = crossingDelay(c); delay += d; return { crossing:c, delay:d }; });
-    return { id:t.name, name:t.name, tag:t.tag, distanceKm:dist, baseTime, delay, totalMinutes: baseTime + delay, crossings:det, riskCount: cs.filter(c => c.status !== 'OPEN').length };
-  });
-}
-
-// INTRA-CITY (LOCAL) LOGIC
-function planLocalRoutes(fromName, toName){
-  let routeData = LOCAL_ROUTES.find(r => r.from === fromName && r.to === toName);
-  
-  // Fallback if route is not predefined
-  if (!routeData) {
-    routeData = { from: fromName, to: toName, crossingIds: [], bypass: "Via City Bypass Road", dist: 3.5, bypassDist: 5.0, time: 9, bypassTime: 15 };
-  }
-
-  const validCrossings = routeData.crossingIds
-    .map(id => CROSSINGS.find(c => c.id === id))
-    .filter(Boolean);
-
-  let cDelay = 0;
-  const det = validCrossings.map(crossing => {
-    const d = crossingDelay(crossing);
-    cDelay += d;
-    return { crossing, delay: d };
-  });
-
-  const directTime = routeData.time + cDelay;
-  const bypassTime = routeData.bypassTime;
-
-  return [
-    {
-      id: 'direct', name: 'Direct Route', tag: 'Shortest path',
-      distanceKm: routeData.dist, baseTime: routeData.time, delay: cDelay,
-      totalMinutes: directTime, crossings: det, riskCount: validCrossings.filter(c => c.status !== 'OPEN').length
-    },
-    {
-      id: 'bypass', name: routeData.bypass, tag: 'Bypass route',
-      distanceKm: routeData.bypassDist, baseTime: routeData.bypassTime, delay: 0,
-      totalMinutes: bypassTime, crossings: [], riskCount: 0
-    }
-  ];
-}
-
-$('#swapBtn').addEventListener('click', () => { const a = fromSelect.value; fromSelect.value = toSelect.value; toSelect.value = a; });
-$('#plannerForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const f = fromSelect.value, t = toSelect.value;
-  if (f === t){ showToast('Origin and destination must be different.', '⚠️'); return; }
-  
-  if (modeSelect.value === 'local') {
-    renderRoutes(planLocalRoutes(f, t), f, t, 'Local', true);
-  } else {
-    renderRoutes(planIntercityRoutes(f, t), f, t, $('#departInput').value || '09:00', false);
-  }
-});
-$('#subscribeForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const em = $('#subscribeEmail').value.trim(); if (!em) return;
-  showToast(`Alerts will be sent to ${em}.`, '📬');
-  e.target.reset();
-});
-
-
-/* LIVE RAILRADAR API LOGIC */
-async function loadLiveTrains() {
-  const stn  = document.getElementById('liveStationSelect').value;
-  const hrs  = document.getElementById('liveHoursSelect').value;
-  const box  = document.getElementById('liveTrainsBox');
-  const stat = document.getElementById('liveStatus');
-
-  box.innerHTML = '<div class="empty-state"><b>Loading…</b>Fetching live data from RailRadar via C++ backend</div>';
-  stat.textContent = 'Fetching…';
-
-  try {
-    const url = `${API_BASE}/api/live-station?stn=${stn}&hrs=${hrs}`;
-    const r = await fetch(url, { headers: { 'accept': 'application/json' } });
-
-    stat.textContent = `HTTP ${r.status}`;
-
-    if (!r.ok) {
-      const errText = await r.text();
-      box.innerHTML = `<div class="empty-state"><b>Backend returned HTTP ${r.status}</b>${errText.slice(0,400)}<br><br>Check if RAILRADAR_API_KEY is set in Render Environment Variables.</div>`;
-      return;
-    }
-
-    const res = await r.json();
-    let trains = null;
-    if (res.data && Array.isArray(res.data.trains)) trains = res.data.trains;
-    else if (res.trains && Array.isArray(res.trains)) trains = res.trains;
-    
-    if (!trains) {
-      box.innerHTML = `<pre style="grid-column:1/-1;background:#fff;padding:16px;border-radius:12px;font-size:12px;overflow:auto;max-height:400px">${JSON.stringify(res, null, 2)}</pre>`;
-      return;
-    }
-
-    if (trains.length === 0) {
-      box.innerHTML = `<div class="empty-state"><b>No trains in the selected window</b>Try 4, 6 or 8 hours.</div>`;
-      stat.textContent = '✅ 0 trains found';
-      return;
-    }
-
-    box.innerHTML = trains.map(t => {
-      const tr = t.train || {};
-      const stop = t.stop || {};
-      const live = t.live || {};
-
-      const num = tr.number || '—';
-      const name = tr.name || 'Unknown Train';
-      const src = tr.source || '';
-      const dst = tr.destination || '';
-      const delay = Number(live.delayMinutes || 0);
+      c.eta -= 1;
+      if (c.eta < 15 && c.state === 'OPEN') c.state = 'CLOSING';
       
-      let eta = stop.departure || stop.arrival || '—';
-      if (live.expectedDepartureTime) eta = live.expectedDepartureTime.slice(11, 16);
-      else if (live.expectedArrivalTime) eta = live.expectedArrivalTime.slice(11, 16);
-
-      const pfRaw = live.platform || live.pf || live.platform_number || stop.platform || t.platform;
-      const platform = pfRaw ? `PF ${pfRaw}` : '—';
-      const delayed = delay > 0;
-      const statusType = live.type || 'scheduled';
-      const statusText = statusType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
-
-      return `
-        <div class="crossing-card" style="border-left-color:${delayed ? 'var(--amber)' : 'var(--green)'}" data-status="${delayed ? 'CLOSING' : 'OPEN'}">
-          <div class="cc-top">
-            <div>
-              <span class="cc-id">${num}</span>
-              <h3 class="cc-name">${name}</h3>
-              <p class="cc-loc">${src}${dst ? ' → ' + dst : ''}</p>
-            </div>
-            <span class="badge ${delayed ? 'closing' : 'open'}"><span class="dot"></span>${delayed ? 'Delayed' : statusText}</span>
-          </div>
-          <div class="cc-meta">
-            <div><span>Time</span><strong>${eta}</strong></div>
-            <div><span>Delay</span><strong>${delay} min</strong></div>
-            <div><span>Platform</span><strong>${platform}</strong></div>
-          </div>
-        </div>
-      `;
-    }).join('');
-    stat.textContent = '✅ Live data loaded';
-
-  } catch (e) {
-    box.innerHTML = `<div class="empty-state"><b>Fetch failed</b>${e.message}<br>Check your internet connection or Render logs.</div>`;
-    stat.textContent = '❌ Failed';
-    console.error('[RailRadar]', e);
-  }
-}
-document.getElementById('loadLiveBtn').addEventListener('click', loadLiveTrains);
-
-
-const navAnchors = $$('#navLinks a');
-new IntersectionObserver(entries => entries.forEach(en => {
-  if (en.isIntersecting) navAnchors.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id));
-}), { rootMargin:'-45% 0px -50% 0px' });
-['home','live-trains','planner'].forEach(id => { const el = document.getElementById(id); if (el) el.scrollIntoView; });
-
-async function loadInitialData(){
-  try {
-    const [cr, ci] = await Promise.all([fetch(API_BASE + '/api/crossings'), fetch(API_BASE + '/api/cities')]);
-    if (!cr.ok || !ci.ok) throw new Error();
-    const cj = await cr.json(); const ij = await ci.json();
-    CROSSINGS = cj.crossings.map(c => ({ ...c, secondsToNext: c.secondsToNext || c.expectedWait || 60, maxTimer: c.secondsToNext || 60, avgWaitMinutes: c.avgWaitMinutes }));
-    CITIES = ij.cities;
-  } catch (err) {
-    console.warn('API not reachable, using fallback data', err);
-    CROSSINGS = FALLBACK_CROSSINGS.map(c => ({ ...c, maxTimer: c.secondsToNext }));
-    CITIES = FALLBACK_CITIES;
-  }
-  renderHeroStats();
-  renderBoard();
-  populateSelects();
-}
-
-function tick(){
-  CROSSINGS.forEach(c => {
-    c.secondsToNext = (c.secondsToNext || 60) - 1;
-    if (c.secondsToNext <= 0){
-      const old = c.status;
-      const T = TRANSITIONS[c.status];
-      c.status = T.next;
-      c.secondsToNext = rand(T.min, T.max);
-      c.maxTimer = c.secondsToNext;
-      if (old === 'CLOSED' && c.status === 'OPEN' && watched.has(c.id)){
-        showToast(`${c.name} is now OPEN.`, '✅', 5000);
-        watched.delete(c.id);
+      if (c.eta <= 0) {
+        c.state = 'CLOSED';
+        // Use Kaggle's actual_closing_time to decide how long it stays closed
+        c.closedTimeRemaining = Math.min(Math.round(c.train.actualClosingTime), 25); 
       }
     }
   });
-  renderBoard(); renderHeroStats();
-  const cl = document.getElementById('boardClock'); if (cl) cl.textContent = fmtClock(new Date());
+  renderBoard();
 }
 
-(async function boot(){
-  document.getElementById('year').textContent = new Date().getFullYear();
-  await loadInitialData();
-  tick();
-  setInterval(tick, 1000);
-})();
+function formatEta(seconds) {
+  if (seconds >= 60) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}m ${String(s).padStart(2, '0')}s`;
+  }
+  return `${seconds}s`;
+}
+
+function renderBoard() {
+  let openCount = 0;
+  let closedCount = 0;
+  let totalWait = 0;
+  
+  listEl.innerHTML = crossings.map(c => {
+    let dotClass, textClass, statusText;
+    
+    if (c.state === 'OPEN') {
+      openCount++;
+      dotClass = 'open'; textClass = 'open';
+      statusText = `closes ~${formatEta(c.eta)}`;
+    } else if (c.state === 'CLOSING') {
+      openCount++; 
+      dotClass = 'closing'; textClass = 'closing';
+      statusText = `closing ${formatEta(c.eta)}`;
+    } else {
+      closedCount++;
+      totalWait += c.closedTimeRemaining;
+      dotClass = 'closed'; textClass = 'closed';
+      statusText = `closed ${formatEta(c.closedTimeRemaining)}`;
+    }
+
+    // Weather indicator from Kaggle dataset
+    let weatherIcon = '☀️';
+    if (c.train?.weather === 'Rain') weatherIcon = '🌧️';
+    else if (c.train?.weather === 'Fog') weatherIcon = '🌫️';
+    else if (c.train?.weather === 'Storm') weatherIcon = '⛈️';
+    else if (c.train?.weather === 'Cloudy') weatherIcon = '☁️';
+
+    return `
+      <div class="crossing-item">
+        <div class="crossing-info">
+          <div class="dot ${dotClass}"></div>
+          <div class="details">
+            <h4>${c.name}</h4>
+            <p>${c.location} &nbsp;|&nbsp; ${weatherIcon} ${c.train?.weather || 'Clear'}</p>
+          </div>
+        </div>
+        <div class="status-text ${textClass}">${statusText}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Update top stats
+  $statOpen.textContent = openCount;
+  $statClosed.textContent = closedCount;
+  $statWait.textContent = closedCount > 0 ? Math.round(totalWait / closedCount) + 's' : '0s';
+}
 </script>
 </body>
 </html>

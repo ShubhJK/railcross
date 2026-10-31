@@ -6,6 +6,7 @@
 <title>RailKross — Punjab Level Crossing Status & Route Planner</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%A6%3C/text%3E%3C/svg%3E" />
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <style>
 :root{--butter-50:#F8F7E9;--butter-100:#E6F0C3;--butter-200:#C7DDAA;--butter-300:#A7BC9A;--butter-400:#9DBF7C;--butter-500:#718B5D;--butter-600:#526743;--butter-700:#3E5232;--ink:#263E36;--ink-2:#526753;--muted:#78866E;--line:#DCE6C8;--line-2:#C7DDAA;--green:#1F9D55;--green-bg:#DCF5E5;--green-ink:#0F6B39;--amber:#E08A00;--amber-bg:#FFF0D2;--amber-ink:#8F5600;--red:#D64545;--red-bg:#FFE3E3;--red-ink:#9E2323;--radius:18px;--shadow-sm:0 2px 10px rgba(140,110,20,.07);--shadow:0 6px 26px rgba(140,110,20,.11);--shadow-lg:0 18px 50px rgba(140,110,20,.18);--mono:'JetBrains Mono',ui-monospace,Menlo,monospace;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -46,33 +47,9 @@ a{color:inherit}
 .stat.g b{color:var(--green-ink)} .stat.r b{color:var(--red-ink)} .stat.a b{color:var(--amber-ink)}
 
 /* MERGED BOARD & TOOLBAR */
-.board-wrapper {
-  background: linear-gradient(165deg,#2B3E36,#1A2D25);
-  border: 1px solid #405E52;
-  border-radius: 22px;
-  padding: 20px;
-  box-shadow: var(--shadow-lg);
-  color: #F8F7E9;
-  position: relative;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  height: 600px;
-}
-.board-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 14px;
-  border-bottom: 1px solid #405E52;
-  margin-bottom: 14px;
-}
-.board-title {
-  display: flex; align-items: center; gap: 9px;
-  font-size: .72rem; font-weight: 800;
-  letter-spacing: .13em; text-transform: uppercase;
-  color: var(--butter-300);
-}
+.board-wrapper { background: linear-gradient(165deg,#2B3E36,#1A2D25); border: 1px solid #405E52; border-radius: 22px; padding: 20px; box-shadow: var(--shadow-lg); color: #F8F7E9; position: relative; z-index: 3; display: flex; flex-direction: column; height: 600px; }
+.board-header-row { display: flex; align-items: center; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid #405E52; margin-bottom: 14px; }
+.board-title { display: flex; align-items: center; gap: 9px; font-size: .72rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; color: var(--butter-300); }
 .board-clock { font-family: var(--mono); font-size: .72rem; color: #78866E; }
 
 /* Dark Toolbar */
@@ -244,7 +221,6 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
 @media (max-width:1020px){.hero-grid{grid-template-columns:1fr}.planner-wrap{grid-template-columns:1fr}.foot-grid{grid-template-columns:1fr 1fr}}
 @media (max-width:760px){.nav-links{display:none}.hero-stats{grid-template-columns:repeat(2,1fr)}.detail-grid{grid-template-columns:1fr}.foot-grid{grid-template-columns:1fr}.bottom-railway-wrapper{height:80px;margin-top:20px;}.moving-train{animation-duration:15s;width:600px;height:58px;bottom:22px;left:-700px;}}
 </style>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
 
@@ -268,7 +244,6 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
     <!-- Left Side: Text & Stats -->
     <div>
       <span class="eyebrow">
-        <!-- Real SVG Indian Flag instead of Emoji -->
         <svg width="18" height="12" viewBox="0 0 30 20" style="border-radius:2px; margin-right:2px;">
           <rect width="30" height="6.66" fill="#FF9933"/>
           <rect y="6.66" width="30" height="6.66" fill="#FFFFFF"/>
@@ -309,16 +284,16 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
           <option value="name">Sort: A–Z</option>
           <option value="wait">Sort: Longest wait</option>
           <option value="status">Sort: Closed first</option>
-          <option value="trains">Sort: Busiest line</option>
         </select>
       </div>
 
       <div class="board-list" id="heroBoardList">
         <!-- Rows injected by JS -->
+        <div class="empty-state"><b>Loading Board...</b></div>
       </div>
 
       <div class="board-footer">
-        <span>●</span> Simulation Mode · Runs offline
+        <span>●</span> Simulation Mode · Loaded <span id="record-count">0</span> rows from Kaggle
       </div>
     </div>
 
@@ -521,108 +496,212 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
 
 <div class="toast-wrap" id="toastWrap"></div>
 
-  <!-- Your original HTML is up here... -->
+<script>
+  // --- Kaggle Dataset Integration & OOP Classes ---
+  class Train {
+    constructor(record) {
+      this.speed = parseFloat(record.speed_kmh) || 50;
+      this.distance = parseFloat(record.distance_km) || 2;
+      this.delay = parseFloat(record.delay_min) || 0;
+      this.weather = record.weather || 'Clear';
+      this.actualClosingTime = parseFloat(record.actual_closing_time) || 15;
+      
+      let rawEta = this.speed > 0 ? (this.distance / this.speed) * 3600 : 60;
+      this.eta = rawEta > 180 ? Math.floor(Math.random() * 80) + 20 : Math.floor(rawEta);
+    }
+  }
 
-  <!-- DELETE your old script, and PASTE the new Kaggle JS here -->
-  <script>
-    class Train {
-      constructor(record) {
-        this.speed = parseFloat(record.speed_kmh) || 50;
-        this.distance = parseFloat(record.distance_km) || 2;
-        this.delay = parseFloat(record.delay_min) || 0;
-        this.weather = record.weather || 'Clear';
-        this.actualClosingTime = parseFloat(record.actual_closing_time) || 15;
+  class RailwayGate {
+    constructor(id, name, location) {
+      this.id = id;
+      this.name = name;
+      this.location = location;
+      this.state = 'OPEN'; 
+      this.train = null;
+      this.eta = 0;
+      this.closedTimeRemaining = 0;
+    }
+  }
+
+  const crossings = [
+    new RailwayGate(20, "20 No. Phatak", "Patiala · Northern Railway"),
+    new RailwayGate(21, "21 No. Phatak", "Patiala · Northern Railway"),
+    new RailwayGate(23, "23 No. Phatak", "Patiala · Northern Railway"),
+    new RailwayGate(24, "24 No. Phatak", "Patiala · Northern Railway"),
+    new RailwayGate(9, "Amritsar-Pathankot LC C-9", "Amritsar · Northern Railway"),
+    new RailwayGate(87, "Bathinda-Delhi LC B/87", "Bathinda · Northern Railway"),
+    new RailwayGate(1, "Canal Level Crossing", "Patiala · Northern Railway"),
+    new RailwayGate(16, "Crossing No. 16", "Patiala · Northern Railway"),
+    new RailwayGate(19, "Crossing No. 19", "Patiala · Northern Railway"),
+    new RailwayGate(164, "Doraha LC 164A", "Doraha · Northern Railway"),
+    new RailwayGate(124, "Jalandhar-Amritsar LC C-124", "Jalandhar · Northern Railway"),
+    new RailwayGate(43, "Ludhiana-Jalandhar LC C-43", "Ludhiana · Northern Railway"),
+    new RailwayGate(2, "Patiala-Rajpura Road Gate", "Patiala · Northern Railway"),
+    new RailwayGate(3, "Patiala-Samana Road Crossing", "Patiala · Northern Railway"),
+    new RailwayGate(4, "Rajpura Junction Gate", "Rajpura · Northern Railway"),
+    new RailwayGate(5, "Sangrur Road Crossing", "Patiala · Northern Railway"),
+    new RailwayGate(6, "Sirhind-Barara LC 113/CE", "Sirhind · Northern Railway")
+  ];
+
+  let dataset = [];
+  let currentFilter = 'ALL';
+  let currentSearch = '';
+  let currentSort = 'name';
+
+  const listEl = document.getElementById('heroBoardList');
+  const statsEl = document.getElementById('heroStats');
+  const clockEl = document.getElementById('boardClock');
+
+  // Clock
+  setInterval(() => {
+    if (clockEl) {
+      const now = new Date();
+      clockEl.textContent = now.toLocaleTimeString('en-US', { hour12: false });
+    }
+  }, 1000);
+
+  // Load Kaggle CSV
+  Papa.parse("railway_data.csv", {
+    download: true, header: true, skipEmptyLines: true,
+    complete: (res) => {
+      dataset = res.data;
+      if (!dataset || dataset.length === 0) {
+        listEl.innerHTML = "<div class='empty-state'><b>CSV is empty.</b></div>";
+        return;
+      }
+      const countEl = document.getElementById('record-count');
+      if (countEl) countEl.textContent = dataset.length;
+
+      crossings.forEach(c => assignNewTrain(c));
+      setInterval(tick, 1000);
+      updateBoardUI(); 
+    },
+    error: (err) => {
+      console.error("Error loading Kaggle CSV", err);
+      listEl.innerHTML = "<div class='empty-state'><b>Error loading CSV.</b> Ensure railway_data.csv is in the web folder.</div>";
+    }
+  });
+
+  function assignNewTrain(crossing) {
+    const randomRecord = dataset[Math.floor(Math.random() * dataset.length)];
+    crossing.train = new Train(randomRecord);
+    crossing.eta = crossing.train.eta;
+    crossing.state = crossing.eta < 15 ? 'CLOSING' : 'OPEN';
+  }
+
+  function tick() {
+    crossings.forEach(c => {
+      if (c.state === 'CLOSED') {
+        c.closedTimeRemaining--;
+        if (c.closedTimeRemaining <= 0) assignNewTrain(c);
+      } else {
+        c.eta -= 1;
+        if (c.eta < 15 && c.state === 'OPEN') c.state = 'CLOSING';
         
-        let rawEta = this.speed > 0 ? (this.distance / this.speed) * 3600 : 60;
-        this.eta = rawEta > 180 ? Math.floor(Math.random() * 80) + 20 : Math.floor(rawEta);
-      }
-    }
-
-    class RailwayGate {
-      constructor(id, name, location) {
-        this.id = id;
-        this.name = name;
-        this.location = location;
-        this.state = 'OPEN'; 
-        this.train = null;
-        this.eta = 0;
-        this.closedTimeRemaining = 0;
-      }
-    }
-
-    const crossings = [
-      new RailwayGate(20, "20 No. Phatak (Crossing No. 20)", "Patiala · Northern Railway"),
-      new RailwayGate(21, "21 No. Phatak (Crossing No. 21)", "Patiala · Northern Railway"),
-      new RailwayGate(23, "23 No. Phatak (Crossing No. 23)", "Patiala · Northern Railway"),
-      new RailwayGate(24, "24 No. Phatak (Crossing No. 24)", "Patiala · Northern Railway"),
-      new RailwayGate(9, "Amritsar-Pathankot LC C-9", "Amritsar · Northern Railway"),
-      new RailwayGate(87, "Bathinda-Delhi LC B/87", "Bathinda · Northern Railway"),
-      new RailwayGate(1, "Canal Level Crossing", "Patiala · Northern Railway")
-    ];
-
-    let dataset = [];
-
-    Papa.parse("railway_data.csv", {
-      download: true, header: true, skipEmptyLines: true,
-      complete: (res) => {
-        dataset = res.data;
-        crossings.forEach(c => assignNewTrain(c));
-        setInterval(tick, 1000);
-        updateBoardUI(); 
-      },
-      error: (err) => {
-        console.error("Error loading Kaggle CSV", err);
+        if (c.eta <= 0) {
+          c.state = 'CLOSED';
+          c.closedTimeRemaining = Math.min(Math.round(c.train.actualClosingTime), 25); 
+        }
       }
     });
+    updateBoardUI();
+  }
 
-    function assignNewTrain(crossing) {
-      const randomRecord = dataset[Math.floor(Math.random() * dataset.length)];
-      crossing.train = new Train(randomRecord);
-      crossing.eta = crossing.train.eta;
-      crossing.state = crossing.eta < 15 ? 'CLOSING' : 'OPEN';
+  function updateBoardUI() {
+    // 1. Update Stats
+    if (statsEl) {
+      let openCount = crossings.filter(c => c.state === 'OPEN' || c.state === 'CLOSING').length;
+      let closedCount = crossings.filter(c => c.state === 'CLOSED').length;
+      let totalWait = crossings.filter(c => c.state === 'CLOSED').reduce((sum, c) => sum + c.closedTimeRemaining, 0);
+      let avgWait = closedCount > 0 ? Math.round(totalWait / closedCount) : 0;
+
+      statsEl.innerHTML = `
+        <div class="stat"><b>${crossings.length}</b><span>Crossings</span></div>
+        <div class="stat g"><b>${openCount}</b><span>Open now</span></div>
+        <div class="stat r"><b>${closedCount}</b><span>Closed now</span></div>
+        <div class="stat a"><b>${avgWait}s</b><span>Avg wait</span></div>
+      `;
     }
 
-    function tick() {
-      crossings.forEach(c => {
-        if (c.state === 'CLOSED') {
-          c.closedTimeRemaining--;
-          if (c.closedTimeRemaining <= 0) assignNewTrain(c);
-        } else {
-          c.eta -= 1;
-          if (c.eta < 15 && c.state === 'OPEN') c.state = 'CLOSING';
-          
-          if (c.eta <= 0) {
-            c.state = 'CLOSED';
-            c.closedTimeRemaining = Math.min(Math.round(c.train.actualClosingTime), 25); 
-          }
-        }
-      });
-      updateBoardUI();
-    }
+    // 2. Filter & Sort List
+    let displayCrossings = crossings.filter(c => {
+      let matchesFilter = currentFilter === 'ALL' || c.state === currentFilter;
+      let matchesSearch = c.name.toLowerCase().includes(currentSearch.toLowerCase()) || 
+                          c.location.toLowerCase().includes(currentSearch.toLowerCase());
+      return matchesFilter && matchesSearch;
+    });
 
-    function updateBoardUI() {
-      // IMPORTANT: Look at your original HTML. What is the ID of the container holding the list of crossings?
-      // If it is id="crossing-list", leave this alone. If it is id="board", change it to 'board'.
-      const listEl = document.getElementById('crossing-list'); 
-      
-      if (listEl) {
-        listEl.innerHTML = crossings.map(c => {
+    displayCrossings.sort((a, b) => {
+      if (currentSort === 'name') return a.name.localeCompare(b.name);
+      if (currentSort === 'wait') return b.closedTimeRemaining - a.closedTimeRemaining;
+      if (currentSort === 'status') {
+        let s = { 'CLOSED': 3, 'CLOSING': 2, 'OPEN': 1 };
+        return s[b.state] - s[a.state];
+      }
+      return 0;
+    });
+
+    // 3. Render Rows
+    if (listEl) {
+      if (displayCrossings.length === 0) {
+        listEl.innerHTML = "<div class='empty-state'><b>No crossings found</b>Try a different search or filter.</div>";
+      } else {
+        listEl.innerHTML = displayCrossings.map(c => {
           let statusText = c.state === 'OPEN' ? `closes ~${c.eta}s` : c.state === 'CLOSING' ? `closing ${c.eta}s` : `closed ${c.closedTimeRemaining}s`;
-          let color = c.state === 'OPEN' ? '#34d399' : c.state === 'CLOSING' ? '#fbbf24' : '#f87171';
-          
-  
+          let stateClass = c.state.toLowerCase();
+          let pillClass = stateClass === 'open' ? 'pill-open' : stateClass === 'closing' ? 'pill-closing' : 'pill-closed';
+          let timeClass = stateClass === 'open' ? 't-open' : stateClass === 'closing' ? 't-closing' : 't-closed';
+
           return `
-            <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid rgba(255,255,255,0.1); color:white;">
-              <div>
-                <div style="font-weight:600;">${c.name}</div>
-                <div style="font-size:12px; color:#8da89a;">${c.location}</div>
+            <div class="board-row">
+              <span class="br-pill ${pillClass}"></span>
+              <div class="br-info">
+                <div class="br-name">${c.name}</div>
+                <div class="br-city">${c.location}</div>
               </div>
-              <div style="color:${color}; font-family:monospace;">${statusText}</div>
+              <div class="br-time ${timeClass}">${statusText}</div>
             </div>
           `;
         }).join('');
       }
     }
-  </script>
+  }
+
+  // 4. Event Listeners for Toolbar
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      currentSearch = e.target.value;
+      updateBoardUI();
+    });
+  }
+
+  const chips = document.querySelectorAll('.chip-dark');
+  chips.forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      chips.forEach(c => c.classList.remove('active'));
+      e.target.classList.add('active');
+      currentFilter = e.target.getAttribute('data-filter');
+      updateBoardUI();
+    });
+  });
+
+  const sortSelect = document.getElementById('sortSelect');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+      currentSort = e.target.value;
+      updateBoardUI();
+    });
+  }
+
+  // Misc (Footer, modal close)
+  document.getElementById('year').textContent = new Date().getFullYear();
+  const modalOverlay = document.getElementById('modalOverlay');
+  if (modalOverlay) {
+    document.getElementById('modalClose').addEventListener('click', () => {
+      modalOverlay.classList.remove('show');
+    });
+  }
+</script>
 </body>
 </html>

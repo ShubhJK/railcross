@@ -719,23 +719,34 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
 
 
   // ==========================================
-  // 3. ROUTE PLANNER LOGIC (PUNJAB HUBS ONLY)
+  // 3. ROUTE PLANNER LOGIC (DETAILED PATIALA LOCAL)
   // ==========================================
-  // Removed outsiders, strictly Punjab hubs
   const intercityCities = ["Patiala", "Rajpura", "Ludhiana", "Jalandhar", "Amritsar", "Bathinda", "Chandigarh"];
   
-  // Important local landmarks only
+  // Comprehensive list of important Patiala landmarks
   const localLocations = [
-    "Thapar University", 
-    "Punjabi University", 
-    "Leela Bhawan", 
-    "Qila Mubarak", 
-    "Sheesh Mahal", 
-    "Gurudwara Dukhniwaran Sahib", 
-    "Patiala Railway Station", 
-    "Patiala Bus Stand"
+    "Thapar University (North)",
+    "Punjabi University (West)",
+    "Sheesh Mahal / Qila Mubarak (Old City)",
+    "Leela Bhawan (Central)",
+    "Baradari Gardens (Central)",
+    "Patiala Railway Station (South)",
+    "Patiala Old Bus Stand (City Center)",
+    "New Bus Stand (Rajpura Bypass)"
   ];
   
+  // Map locations to their real-world road networks
+  const localRouteHubs = {
+    "Thapar University (North)": { road: "Bhadson Road", area: "North" },
+    "Punjabi University (West)": { road: "Patiala-Rajpura Bypass", area: "West" },
+    "Sheesh Mahal / Qila Mubarak (Old City)": { road: "Mall Road / Old City", area: "Center" },
+    "Leela Bhawan (Central)": { road: "Leela Bhawan Chowk", area: "Center" },
+    "Baradari Gardens (Central)": { road: "Baradari Road", area: "Center" },
+    "Patiala Railway Station (South)": { road: "Station Road", area: "South" },
+    "Patiala Old Bus Stand (City Center)": { road: "Mall Road", area: "Center" },
+    "New Bus Stand (Rajpura Bypass)": { road: "Rajpura Road / NH 64 Bypass", area: "South Outskirts" }
+  };
+
   const modeSelect = document.getElementById('modeSelect');
   const fromSelect = document.getElementById('fromSelect');
   const toSelect = document.getElementById('toSelect');
@@ -755,7 +766,6 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
     if (list.length > 1) toSelect.selectedIndex = 1;
   }
 
-  // Initialize dropdowns
   populateDropdowns('intercity');
 
   modeSelect.addEventListener('change', (e) => {
@@ -784,15 +794,29 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
     let delayStr = "";
     let crossingName = "";
     let crossingLoc = "";
+    let routeRoads = "";
     let showCrossing = false;
 
     if (mode === 'local') {
-        // Realistic local times (10 to 25 mins based on Patiala city distances)
-        let baseMin = Math.floor(Math.random() * 15) + 10; 
-        timeStr = `${baseMin} mins`;
+        const hubFrom = localRouteHubs[from];
+        const hubTo = localRouteHubs[to];
         
-        // Only show a crossing if it's not a direct station pickup/dropoff AND priority is time
-        if (from !== "Patiala Railway Station" && to !== "Patiala Railway Station" && priority === 'time') {
+        // Realistic local times (10 to 25 mins)
+        let baseMin = Math.floor(Math.random() * 15) + 10; 
+        if (hubFrom.area === "North" && hubTo.area === "South Outskirts") baseMin = 35; // Thapar to New Bus Stand
+        if (hubFrom.area === "West" && hubTo.area === "Center") baseMin = 25; // Punjabi Uni to Leela Bhawan
+        
+        timeStr = `${baseMin} mins`;
+
+        // Build road context
+        if (hubFrom.road === hubTo.road) {
+            routeRoads = `via ${hubFrom.road}`;
+        } else {
+            routeRoads = `via ${hubFrom.road} and ${hubTo.road}`;
+        }
+        
+        // Crossing logic: only show if crossing from North/Center to South
+        if ((hubFrom.area === "North" || hubFrom.area === "Center") && hubTo.area === "South" && priority === 'time') {
             showCrossing = true;
             crossingName = "22 No. Phatak";
             crossingLoc = "Patiala · Northern Railway";
@@ -812,13 +836,10 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
             "Patiala-Bathinda": { time: 165, crossing: "Rampura Phul Gate" } // ~2h 45m
         };
 
-        // Find matching route (either direction)
         let key = `${from}-${to}`;
         if (!routes[key]) key = `${to}-${from}`;
-        
         const routeInfo = routes[key] || { time: 60, crossing: "" };
         
-        // Format time
         if (routeInfo.time >= 60) {
             let h = Math.floor(routeInfo.time / 60);
             let m = routeInfo.time % 60;
@@ -827,7 +848,6 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
             timeStr = `${routeInfo.time}m`;
         }
 
-        // Apply priority logic
         if (routeInfo.crossing && priority === 'time') {
             showCrossing = true;
             crossingName = routeInfo.crossing;
@@ -836,6 +856,12 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
         } else {
             delayStr = "0m";
         }
+
+        if (from === "Patiala" && to === "Rajpura") routeRoads = "via NH 64";
+        else if (from === "Patiala" && to === "Chandigarh") routeRoads = "via NH 7 / NH 44";
+        else if (from === "Patiala" && to === "Ludhiana") routeRoads = "via NH 44 / GT Road";
+        else if (from === "Patiala" && to === "Amritsar") routeRoads = "via NH 44";
+        else routeRoads = "via major Punjab highways";
     }
 
     // Build Timeline HTML dynamically
@@ -867,7 +893,7 @@ footer{background:linear-gradient(170deg,#263E36,#1A2D25);color:#A7BC9A;padding-
             <div class="tl-node end"></div>
             <div class="tl-body">
                 <div class="tl-title">Arrive ${to}</div>
-                <div class="tl-sub">Destination reached</div>
+                <div class="tl-sub">${routeRoads}</div>
             </div>
         </div>
     `;
